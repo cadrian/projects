@@ -49,7 +49,7 @@ make_tags() {
 #!/usr/bin/env bash
 
 cd $PROJECT/dev
-etags -f $PROJECT/.mk/TAGS --language-force=python --extra=+f --fields=+ailmnSz \$(find . -name \*.py) 2>/dev/null|| echo "Brand new project: no file tagged."
+etags -f $PROJECT/.mk/TAGS --language-force=python --extra=+f --fields=+ailmnSz \$(find . -name \*.py) 2>/dev/null || echo "Brand new project: no file tagged."
 EOF
     chmod +x $PROJECT/bin/tag_all.sh
     $PROJECT/bin/tag_all.sh
@@ -61,13 +61,13 @@ make_go() {
 
 export PATH=\$({
         echo $PROJECT/bin
-        find $PROJECT/dev/ -type d -name bin | sort
+        find -L $PROJECT/dev/ -type d -name bin | sort
     } | awk '{printf("%s:", \$0)}'
     echo \$PROJECT_DEFAULT_PATH
 )
 
 export PYTHONPATH=\$({
-        find $PROJECT/dev/ -type d -name src | sort
+        find -L $PROJECT/dev/ -type d -name src | sort
     } | awk '{printf("%s:", \$0)}'
     echo
 )
