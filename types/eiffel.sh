@@ -59,14 +59,17 @@ EOF
 
 
 make_go() {
-    {
-	{
-	    echo 'export PATH='$PROJECT/bin
-	    find $PROJECT/dev/ -type d -name bin | sort
-	} | awk '{printf("%s:", $0)}'
-	echo $PATH
-	echo $PROJECT/bin/tag_all.sh
-    } > $PROJECT/go
+    cat > $PROJECT/go <<EOF
+
+export PATH=\$({
+        echo $PROJECT/bin
+        find -L $PROJECT/dev/ -type d -name bin | sort
+    } | awk '{printf("%s:", \$0)}'
+    echo \$PROJECT_DEFAULT_PATH
+)
+
+$PROJECT/bin/tag_all.sh
+EOF
 }
 
 
