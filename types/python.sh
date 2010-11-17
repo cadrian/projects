@@ -6,7 +6,7 @@ PROJECT=$PROJECTS_DIR/$1
 
 make_emacs() {
     cat > $PROJECT/project.el <<EOF
-(setq load-path (cons "$PROJECT_PACK/site-lisp" "$PROJECT_PACK/site-lisp/mk-project" load-path))
+(setq load-path (cons "$PROJECT_PACK/site-lisp" (cons "$PROJECT_PACK/site-lisp/mk-project" load-path)))
 
 (require 'mk-project)
 (global-set-key (kbd "C-c p c") 'project-compile)
