@@ -16,17 +16,27 @@ export PROJECT_DEFAULT_PATH="$PATH"
 export PROJECT_DEFAULT_PS1="$PS1"
 
 
-# Go to the given project.
-# $1 => project name
-go_to_project() {
-    PROJECT=$PROJECTS_DIR/$1
+# Find the last saved project
+if [ -h $PROJECT_CURRENT ]; then
+    CURRENT_PROJECT=$(ls -l $PROJECT_CURRENT | sed 's/^.*->\s*//')
+    CURRENT_PROJECT=${CURRENT_PROJECT##*/}
+fi
 
+
+# Go to the given project.
+# $1 => project name (defaults to current project, if it exists)
+go_to_project() {
     if [ -z "$1" ]; then
-	echo "Must provide: project name" >&2
-	echo "Not enough arguments: aborting." >&2
-	return 1
+	if [ -z "$CURRENT_PROJECT" ]; then
+	    echo "Must provide: project name" >&2
+	    echo "Not enough arguments: aborting." >&2
+	    return 1
+	fi
+    else
+	CURRENT_PROJECT=$1
     fi
 
+    PROJECT=$PROJECTS_DIR/$CURRENT_PROJECT
     test -d $PROJECTS_DIR || mkdir $PROJECTS_DIR
 
     if [ -e $PROJECT_CURRENT ]; then
@@ -39,19 +49,18 @@ go_to_project() {
     fi
 
     if [ ! -d $PROJECT ]; then
-	echo "Unknown project $1: aborting." >&2
+	echo "Unknown project $CURRENT_PROJECT: aborting." >&2
 	return 1
     fi
 
-    echo "Please wait, going to project $1."
+    echo "Please wait, going to project $CURRENT_PROJECT."
 
     ln -s $PROJECT $PROJECT_CURRENT
-    CURRENT_PROJECT=$1
 
     export PATH="$PROJECT_DEFAULT_PATH"
     . $PROJECT/go
 
-    export PS1="[$1] $PROJECT_DEFAULT_PS1"
+    export PS1="[$CURRENT_PROJECT] $PROJECT_DEFAULT_PS1"
     cd $(ls -l $PROJECT/dev | sed 's/^.*->\s*//')
 }
 
@@ -98,13 +107,10 @@ create_new_project() {
 }
 
 
-# Restore the last saved project
-if [ -h $PROJECT_CURRENT ]; then
-    current_project=$(ls -l $PROJECT_CURRENT | sed 's/^.*->\s*//')
-    go_to_project "${current_project##*/}"
-fi
-
-
 # Some aliases
 alias gp=go_to_project
 alias np=create_new_project
+
+
+#Restore the last saved project
+go_to_project
