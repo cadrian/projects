@@ -108,9 +108,45 @@ create_new_project() {
 }
 
 
+# Create a new project.
+# $1 => project name to link to current
+link_dependency() {
+    DEP_PROJECT=$PROJECTS_DIR/$1
+    PROJECT=$PROJECTS_DIR/$CURRENT_PROJECT
+
+    if [ -z $CURRENT_PROJECT ]; then
+        echo "Must be in a project" >&2
+        return 1
+    fi
+
+    if [ -z "$1" ]; then
+        echo "Must provide: dependent project" >&2
+        echo "Not enough arguments: aborting." >&2
+        return 1
+    fi
+
+    if [ ! -d $DEP_PROJECT ]; then
+        echo "Unknown project $1: aborting." >&2
+        return 1
+    fi
+
+    if [ -h $PROJECT/dep/$1 ]; then
+        echo "Dependency already linked; nothing to do." >&2
+        return 0
+    fi
+
+    echo "Please wait, linking project $1 to $CURRENT_PROJECT."
+
+    test -d $PROJECT/dep || mkdir $PROJECT/dep
+    DEP_PROJECT_DEV=$(ls -l $DEP_PROJECT/dev | sed 's/^.*->\s*//')
+    ln -s $DEP_PROJECT_DEV $PROJECT/dep/$1
+}
+
+
 # Some aliases
 alias gp=go_to_project
 alias np=create_new_project
+alias lp=link_dependency
 
 
 #Restore the last saved project
