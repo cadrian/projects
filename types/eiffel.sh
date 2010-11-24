@@ -39,6 +39,11 @@ make_emacs() {
   (add-to-list 'auto-mode-alist '("\\\\.se\\\\'" . eiffel-mode))
   (autoload 'eiffel-mode "eiffel" "Major mode for Eiffel programs" t))
 
+(defun tabs-eiffel-mode-hook ()
+ (message " Loading tabs-eiffel-mode-hook...")
+ (setq indent-tabs-mode t))
+(add-hook 'eiffel-mode-hook 'tabs-eiffel-mode-hook)
+
 (set-frame-name "$PROJECT_NAME")
 (project-load "$PROJECT_NAME-project")
 (project-dired)

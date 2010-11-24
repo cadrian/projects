@@ -24,15 +24,15 @@ make_emacs() {
 
 (project-def "$PROJECT_NAME-project"
       '((basedir          "$PROJECT/dev/")
-        (src-patterns     ("*.e"))
-        (ignore-patterns  ("*.o"))
-        (tags-file        "$PROJECT/.mk/TAGS")
-        (file-list-cache  "$PROJECT/.mk/files")
-        (open-files-cache "$PROJECT/.mk/open-files")
-        (vcs              git)
-        (compile-cmd      nil)
-        (startup-hook     $PROJECT_NAME-project-startup)
-        (shutdown-hook    nil)))
+	(src-patterns     ("*.e"))
+	(ignore-patterns  ("*.o"))
+	(tags-file        "$PROJECT/.mk/TAGS")
+	(file-list-cache  "$PROJECT/.mk/files")
+	(open-files-cache "$PROJECT/.mk/open-files")
+	(vcs              git)
+	(compile-cmd      nil)
+	(startup-hook     $PROJECT_NAME-project-startup)
+	(shutdown-hook    nil)))
 
 (defun $PROJECT_NAME-project-startup ()
   nil)
@@ -49,7 +49,7 @@ make_tags() {
 #!/usr/bin/env bash
 
 cd $PROJECT/dev
-etags -f $PROJECT/.mk/TAGS --language-force=python --extra=+f --fields=+ailmnSz \$(find . -name \*.py) 2>/dev/null || echo "Brand new project: no file tagged."
+etags -f $PROJECT/.mk/TAGS --language-force=python --python-kinds=cfm \$(find -L . -name \*.py) 2>/dev/null || echo "Brand new project: no file tagged."
 EOF
     chmod +x $PROJECT/bin/tag_all.sh
     $PROJECT/bin/tag_all.sh
@@ -60,14 +60,14 @@ make_go() {
     cat > $PROJECT/go <<EOF
 
 export PATH=\$({
-        echo $PROJECT/bin
-        find -L $PROJECT/dev/ -type d -name bin | sort
+	echo $PROJECT/bin
+	find -L $PROJECT/dev/ -type d -name bin | sort
     } | awk '{printf("%s:", \$0)}'
     echo \$PROJECT_DEFAULT_PATH
 )
 
 export PYTHONPATH=\$({
-        find -L $PROJECT/dev/ -type d -name src | sort
+	find -L $PROJECT/dev/ -type d -name src | sort
     } | awk '{printf("%s:", \$0)}'
     echo
 )
