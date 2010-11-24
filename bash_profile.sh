@@ -48,11 +48,11 @@ go_to_project() {
     ln -s $PROJECT $PROJECT_CURRENT
     CURRENT_PROJECT=$1
 
-    export PATH="$PROJECT_DEFAULT_PATH"
-    . $PROJECT/go
-
     export PS1="[$1] $PROJECT_DEFAULT_PS1"
     cd $(ls -l $PROJECT/dev | sed 's/^.*->\s*//')
+
+    export PATH="$PROJECT_DEFAULT_PATH"
+    . $PROJECT/go
 }
 
 
