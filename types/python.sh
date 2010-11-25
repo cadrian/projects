@@ -71,19 +71,15 @@ make_go() {
 
 export PATH=\$({
 	echo $PROJECT/bin
-	find -L $PROJECT/dev/ -type d -name bin | sort
+	find -L $PROJECT/dev -type d -name bin | sort
+	test -d $PROJECT/dep && find -L $PROJECT/dep -type d -name bin | sort
     } | awk '{printf("%s:", \$0)}'
     echo \$PROJECT_DEFAULT_PATH
 )
 
 export PYTHONPATH=\$({
-	find $PROJECT/dev/ -type d -name src | sort
-	for dep in \$(echo \$PROJECT/dep/*); do
-	    if [ -h \$dep ]; then
-		project=$PROJECTS_DIR/\${dep#\$PROJECT/dep/}
-		find -L \$project -type d -name src | sort
-	    fi
-	done
+	$PROJECT_PACK/utils/modules_finder.py \$(find -L $PROJECT/dev -name __init__.py -exec dirname {} \; | sort)
+	test -d $PROJECT/dep && $PROJECT_PACK/utils/modules_finder.py \$(find -L $PROJECT/dep -name __init__.py -exec dirname {} \; | sort) | sort
     } | awk '{printf("%s:", \$0)}'
     echo
 )
