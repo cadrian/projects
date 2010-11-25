@@ -184,7 +184,7 @@ _go_to_project_completion() {
 	shopt -u extglob
     fi
 }
-complete -F _go_to_project_completion go_to_project gp
+complete -F _go_to_project_completion go_to_project gp link_dependency lp
 
 _create_new_project_completion() {
     local cur extglob
