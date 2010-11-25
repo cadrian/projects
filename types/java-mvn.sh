@@ -13,16 +13,16 @@ make_emacs() {
 (add-to-list 'load-path "$MALABAR/lisp")
 
 (setq semantic-default-submodes '(global-semantic-idle-scheduler-mode
-                                  global-semanticdb-minor-mode
-                                  global-semantic-idle-summary-mode
-                                  global-semantic-mru-bookmark-mode))
+				  global-semanticdb-minor-mode
+				  global-semantic-idle-summary-mode
+				  global-semantic-mru-bookmark-mode))
 ;(semantic-mode 1)
 (require 'malabar-mode)
 (setq malabar-groovy-lib-dir "$MALABAR/lib")
 (add-hook 'malabar-mode-hook
   (lambda ()
     (add-hook 'after-save-hook 'malabar-compile-file-silently
-               nil t)))
+	       nil t)))
 
 (require 'mk-project)
 (global-set-key (kbd "C-c p c") 'project-compile)
@@ -40,15 +40,15 @@ make_emacs() {
 
 (project-def "$PROJECT_NAME-project"
       '((basedir          "$PROJECT/dev/")
-        (src-patterns     ("*.java" "*.c" "*.cpp" "*.h"))
-        (ignore-patterns  ("*.o"))
-        (tags-file        "$PROJECT/.mk/TAGS")
-        (file-list-cache  "$PROJECT/.mk/files")
-        (open-files-cache "$PROJECT/.mk/open-files")
-        (vcs              git)
-        (compile-cmd      "mvn")
-        (startup-hook     $PROJECT_NAME-project-startup)
-        (shutdown-hook    nil)))
+	(src-patterns     ("*.java" "*.c" "*.cpp" "*.h"))
+	(ignore-patterns  ("*.o"))
+	(tags-file        "$PROJECT/.mk/TAGS")
+	(file-list-cache  "$PROJECT/.mk/files")
+	(open-files-cache "$PROJECT/.mk/open-files")
+	(vcs              git)
+	(compile-cmd      "mvn")
+	(startup-hook     $PROJECT_NAME-project-startup)
+	(shutdown-hook    nil)))
 
 (defun $PROJECT_NAME-project-startup ()
   (add-to-list 'auto-mode-alist '("\\\\.java\\\\'" . malabar-mode))
@@ -67,7 +67,7 @@ make_emacs() {
 (add-hook 'kill-emacs-hook
   (lambda ()
     (if (malabar-groovy-live-p)
-        (malabar-groovy-stop))))
+	(malabar-groovy-stop))))
 
 (load "fix-java.el")
 
@@ -88,10 +88,10 @@ etags \$@ -f \$TAGS --language-force=Java --Java-kinds=-f \$(find \$PROJECT/dev/
 
 if [ -d \$PROJECT/dep ]; then
     for dep in \$(echo \$PROJECT/dep/*); do
-        if [ -h \$dep ]; then
-            project=$PROJECTS_DIR/\${dep#\$PROJECT/dep/}
-            PROJECT=\$project \$project/bin/tag_all.sh -a
-        fi
+	if [ -h \$dep ]; then
+	    project=$PROJECTS_DIR/\${dep#\$PROJECT/dep/}
+	    PROJECT=\$project \$project/bin/tag_all.sh -a
+	fi
     done
 fi
 EOF
@@ -104,8 +104,9 @@ make_go() {
     cat > $PROJECT/go <<EOF
 
 export PATH=\$({
-        echo $PROJECT/bin
-        find -L $PROJECT/dev/ -type d -name bin | sort
+	echo $PROJECT/bin
+	find -L $PROJECT/dev/ -type d -name bin | sort
+	test -d $PROJECT/dep && find -L $PROJECT/dep -type d -name bin | sort
     } | awk '{printf("%s:", \$0)}'
     echo \$PROJECT_DEFAULT_PATH
 )
