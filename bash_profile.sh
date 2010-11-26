@@ -217,7 +217,3 @@ alias gp=go_to_project
 alias np=create_new_project
 alias lp=link_dependency
 alias lsp=list_projects
-
-
-# Restore the last saved project
-go_to_project
