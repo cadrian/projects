@@ -27,30 +27,30 @@ fi
 # $1 => project name (defaults to current project, if it exists)
 go_to_project() {
     if [ -z "$1" ]; then
-        if [ -z "$CURRENT_PROJECT" ]; then
-            echo "Must provide: project name" >&2
-            echo "Not enough arguments: aborting." >&2
-            return 1
-        fi
+	if [ -z "$CURRENT_PROJECT" ]; then
+	    echo "Must provide: project name" >&2
+	    echo "Not enough arguments: aborting." >&2
+	    return 1
+	fi
     else
-        CURRENT_PROJECT=$1
+	CURRENT_PROJECT=$1
     fi
 
     PROJECT=$PROJECTS_DIR/$CURRENT_PROJECT
     test -d $PROJECTS_DIR || mkdir $PROJECTS_DIR
 
     if [ -e $PROJECT_CURRENT ]; then
-        if [ -h $PROJECT_CURRENT ]; then
-            rm -f $PROJECT_CURRENT
-        else
-            echo "$PROJECT_CURRENT is not a symlink: aborting." >&2
-            return 1
-        fi
+	if [ -h $PROJECT_CURRENT ]; then
+	    rm -f $PROJECT_CURRENT
+	else
+	    echo "$PROJECT_CURRENT is not a symlink: aborting." >&2
+	    return 1
+	fi
     fi
 
     if [ ! -d $PROJECT ]; then
-        echo "Unknown project $CURRENT_PROJECT: aborting." >&2
-        return 1
+	echo "Unknown project $CURRENT_PROJECT: aborting." >&2
+	return 1
     fi
 
     echo "Please wait, going to project $CURRENT_PROJECT."
@@ -76,24 +76,24 @@ create_new_project() {
     PROJECT_DEVDIR=$(cd $3 && pwd)
 
     if [ -z "$1" -o -z "$2" -o -z "$3" ]; then
-        echo "Must provide: project name, project type, and project dev directory" >&2
-        echo "Not enough arguments: aborting." >&2
-        return 1
+	echo "Must provide: project name, project type, and project dev directory" >&2
+	echo "Not enough arguments: aborting." >&2
+	return 1
     fi
 
     if [ -d $PROJECT ]; then
-        echo "Duplicate project $1: aborting." >&2
-        return 1
+	echo "Duplicate project $1: aborting." >&2
+	return 1
     fi
 
     if [ ! -x $PROJECT_FACTORY ]; then
-        echo "Unknown project type $2: aborting." >&2
-        return 1
+	echo "Unknown project type $2: aborting." >&2
+	return 1
     fi
 
     if [ ! -d "$PROJECT_DEVDIR" ]; then
-        echo "Unknown dev directory $3: aborting." >&2
-        return 1
+	echo "Unknown dev directory $3: aborting." >&2
+	return 1
     fi
 
     test -d $PROJECTS_DIR || mkdir $PROJECTS_DIR
@@ -103,6 +103,7 @@ create_new_project() {
     mkdir $PROJECT
     mkdir $PROJECT/bin
     ln -s $PROJECT_DEVDIR $PROJECT/dev
+    echo $2 > $PROJECT/type
 
     $PROJECT_FACTORY $1
 }
@@ -115,24 +116,24 @@ link_dependency() {
     PROJECT=$PROJECTS_DIR/$CURRENT_PROJECT
 
     if [ -z $CURRENT_PROJECT ]; then
-        echo "Must be in a project" >&2
-        return 1
+	echo "Must be in a project" >&2
+	return 1
     fi
 
     if [ -z "$1" ]; then
-        echo "Must provide: dependent project" >&2
-        echo "Not enough arguments: aborting." >&2
-        return 1
+	echo "Must provide: dependent project" >&2
+	echo "Not enough arguments: aborting." >&2
+	return 1
     fi
 
     if [ ! -d $DEP_PROJECT ]; then
-        echo "Unknown project $1: aborting." >&2
-        return 1
+	echo "Unknown project $1: aborting." >&2
+	return 1
     fi
 
     if [ -h $PROJECT/dep/$1 ]; then
-        echo "Dependency already linked; nothing to do." >&2
-        return 0
+	echo "Dependency already linked; nothing to do." >&2
+	return 0
     fi
 
     echo "Please wait, linking project $1 to $CURRENT_PROJECT."
@@ -143,11 +144,76 @@ link_dependency() {
 }
 
 
+# List all known projects.
+list_projects() {
+    format="%-16s | %-8s | %-80s\n"
+    printf "$format" Name Type "Home dev directory"
+    printf "$format" "----------------" "--------" "--------------------------------------------------------------------------------"
+    for project in $PROJECTS_DIR/*; do
+	if [ -d $project ]; then
+	    printf "$format" ${project##*/} $(< $project/type) $(ls -l $project/dev | sed 's/^.*->\s*//')
+	fi
+    done
+}
+
+
+# Bash completion
+_list_projects() {
+    find $PROJECTS_DIR -mindepth 1 -maxdepth 1 -type d | sed 's!^'"$PROJECTS_DIR/"'!!'
+}
+
+_list_types() {
+    find $PROJECT_PACK/types -name \*.sh -executable | sed 's!^'"$PROJECT_PACK/types/"'\(.*\)\.sh$!\1!'
+}
+
+_go_to_project_completion() {
+    local cur extglob
+    shopt extglob|grep -q on
+    extglob=$?
+    shopt -s extglob
+    # the possible completion words
+    COMPREPLY=()
+    # the current word to be completed, can be empty
+    cur="${COMP_WORDS[COMP_CWORD]}"
+
+    if [ $COMP_CWORD -eq 1 ]; then
+	COMPREPLY=($(compgen -W "$(_list_projects)" -- "$cur"))
+    fi
+
+    if [ $extglob = 1 ]; then
+	shopt -u extglob
+    fi
+}
+complete -F _go_to_project_completion go_to_project gp link_dependency lp
+
+_create_new_project_completion() {
+    local cur extglob
+    shopt extglob|grep -q on
+    extglob=$?
+    shopt -s extglob
+    # the possible completion words
+    COMPREPLY=()
+    # the current word to be completed, can be empty
+    cur="${COMP_WORDS[COMP_CWORD]}"
+
+    case $COMP_CWORD in
+	2)
+	    COMPREPLY=($(compgen -W "$(_list_types)" -- "$cur"))
+	    ;;
+	3)
+	    COMPREPLY=($(compgen -d -W "." -- "$cur"))
+	    ;;
+    esac
+
+    if [ $extglob = 1 ]; then
+	shopt -u extglob
+    fi
+}
+complete -F _create_new_project_completion create_new_project np
+
+
 # Some aliases
 alias gp=go_to_project
 alias np=create_new_project
 alias lp=link_dependency
-
-
-#Restore the last saved project
-go_to_project
+alias lsp=list_projects
