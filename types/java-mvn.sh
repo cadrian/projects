@@ -16,7 +16,7 @@ make_emacs() {
                                   global-semanticdb-minor-mode
                                   global-semantic-idle-summary-mode
                                   global-semantic-mru-bookmark-mode))
-;(semantic-mode 1)
+(semantic-mode 1)
 (require 'malabar-mode)
 (setq malabar-groovy-lib-dir "$MALABAR/lib")
 (add-hook 'malabar-mode-hook
