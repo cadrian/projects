@@ -24,15 +24,15 @@ make_emacs() {
 
 (project-def "$PROJECT_NAME-project"
       '((basedir          "$PROJECT/dev/")
-	(src-patterns     ("*.e"))
-	(ignore-patterns  ("*.o"))
-	(tags-file        "$PROJECT/.mk/TAGS")
-	(file-list-cache  "$PROJECT/.mk/files")
-	(open-files-cache "$PROJECT/.mk/open-files")
-	(vcs              git)
-	(compile-cmd      nil)
-	(startup-hook     $PROJECT_NAME-project-startup)
-	(shutdown-hook    nil)))
+        (src-patterns     ("*.e"))
+        (ignore-patterns  ("*.o"))
+        (tags-file        "$PROJECT/.mk/TAGS")
+        (file-list-cache  "$PROJECT/.mk/files")
+        (open-files-cache "$PROJECT/.mk/open-files")
+        (vcs              git)
+        (compile-cmd      nil)
+        (startup-hook     $PROJECT_NAME-project-startup)
+        (shutdown-hook    nil)))
 
 (defun $PROJECT_NAME-project-startup ()
   nil)
@@ -54,10 +54,10 @@ etags \$@ -f \$TAGS --language-force=python --python-kinds=cfm \$(find \$PROJECT
 
 if [ -d \$PROJECT/dep ]; then
     for dep in \$(echo \$PROJECT/dep/*); do
-	if [ -h \$dep ]; then
-	    project=$PROJECTS_DIR/\${dep#\$PROJECT/dep/}
-	    PROJECT=\$project \$project/bin/tag_all.sh -a
-	fi
+        if [ -h \$dep ]; then
+            project=$PROJECTS_DIR/\${dep#\$PROJECT/dep/}
+            PROJECT=\$project \$project/bin/tag_all.sh -a
+        fi
     done
 fi
 EOF
@@ -70,21 +70,26 @@ make_go() {
     cat > $PROJECT/go <<EOF
 
 export PATH=\$({
-	echo $PROJECT/bin
-	find -L $PROJECT/dev -type d -name bin | sort
-	test -d $PROJECT/dep && find -L $PROJECT/dep -type d -name bin | sort
+        echo $PROJECT/bin
+        find -L $PROJECT/dev -type d -name bin | sort
+        test -d $PROJECT/dep && find -L $PROJECT/dep -type d -name bin | sort
     } | awk '{printf("%s:", \$0)}'
     echo \$PROJECT_DEFAULT_PATH
 )
 
 export PYTHONPATH=\$({
-	$PROJECT_PACK/utils/modules_finder.py \$(find -L $PROJECT/dev -name __init__.py -exec dirname {} \; | sort)
-	test -d $PROJECT/dep && $PROJECT_PACK/utils/modules_finder.py \$(find -L $PROJECT/dep -name __init__.py -exec dirname {} \; | sort) | sort
+        $PROJECT_PACK/utils/modules_finder.py \$(find -L $PROJECT/dev -name __init__.py -exec dirname {} \; | sort)
+        test -d $PROJECT/dep && $PROJECT_PACK/utils/modules_finder.py \$(find -L $PROJECT/dep -name __init__.py -exec dirname {} \; | sort) | sort
     } | awk '{printf("%s:", \$0)}'
     echo
 )
 
 $PROJECT/bin/tag_all.sh
+
+fpy() {
+    find $(pwd) \( -name CVS -o -name .svn -o -name .git \) -prune -o -name \*.py -exec grep -Hn "$@" {} \;
+}
+
 EOF
 }
 
