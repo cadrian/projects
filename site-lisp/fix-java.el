@@ -1,14 +1,14 @@
+;; Hack to get a little better java 1.5 support
+;; Copied from http://osdir.com/ml/emacs.jdee/2007-07/msg00022.html
+;; ... and adapted to allow enums
+
 (require 'font-lock)
 (require 'cc-mode)
 
-;; FIXME temp hack to get a little better java 1.5 support
 (let* ((java-keywords
         (eval-when-compile
           (regexp-opt
-           '("catch" "do" "else" "super" "this" "finally" "for" "if"
-             ;; Anders Lindgren <****> says these have gone.
-             ;; "cast" "byvalue" "future" "generic" "operator" "var"
-             ;; "inner" "outer" "rest"
+           '("catch" "class" "do" "else" "enum" "super" "this" "finally" "for" "if"
              "implements" "extends" "throws" "instanceof" "new"
              "interface" "return" "switch" "throw" "try" "while"))))
        ;;
@@ -28,10 +28,7 @@
         (eval-when-compile
           (regexp-opt
            '("abstract" "const" "final" "synchronized" "transient" "static"
-             ;; Anders Lindgren <****> says this has gone.
-             ;; "threadsafe"
              "volatile" "public" "private" "protected" "native"
-             ;; Carl Manning <caroma@xxxxxxxxxx> says this is new.
              "strictfp"))))
        )
 
