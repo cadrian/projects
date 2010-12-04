@@ -66,6 +66,25 @@ go_to_project() {
 }
 
 
+# Temporarily go to the given project. "dependent" because completion will propose deps of the current project.
+# $1 => project name (defaults to current project, if it exists)
+go_to_dependent_project() {
+    if [ -z "$CURRENT_PROJECT" ]; then
+	echo "Please go to some project first: aborting." >&2
+	return 1
+    fi
+
+    if [ -z "$1" ]; then
+	dep=dev
+    else
+	dep=dep/$1
+    fi
+
+    PROJECT=$PROJECTS_DIR/$CURRENT_PROJECT
+    cd $(ls -l $PROJECT/$dep | sed 's/^.*->\s*//')
+}
+
+
 # Create a new project.
 # $1 => project name
 # $2 => project type
@@ -166,6 +185,10 @@ _list_types() {
     find $PROJECT_PACK/types -name \*.sh -executable | sed 's!^'"$PROJECT_PACK/types/"'\(.*\)\.sh$!\1!'
 }
 
+_list_deps() {
+    test -d $PROJECTS_DIR/$CURRENT_PROJECT/dep && find $PROJECTS_DIR/$CURRENT_PROJECT/dep -mindepth 1 -maxdepth 1 -type d | sed 's!^'"$PROJECTS_DIR/$CURRENT_PROJECT/dep"'!!'
+}
+
 _go_to_project_completion() {
     local cur extglob
     shopt extglob|grep -q on
@@ -185,6 +208,26 @@ _go_to_project_completion() {
     fi
 }
 complete -F _go_to_project_completion go_to_project gp link_dependency lp
+
+_go_to_dependent_project_completion() {
+    local cur extglob
+    shopt extglob|grep -q on
+    extglob=$?
+    shopt -s extglob
+    # the possible completion words
+    COMPREPLY=()
+    # the current word to be completed, can be empty
+    cur="${COMP_WORDS[COMP_CWORD]}"
+
+    if [ $COMP_CWORD -eq 1 ]; then
+	COMPREPLY=($(compgen -W "$(_list_deps)" -- "$cur"))
+    fi
+
+    if [ $extglob = 1 ]; then
+	shopt -u extglob
+    fi
+}
+complete -F _go_to_project_completion go_to_dependent_project cdp
 
 _create_new_project_completion() {
     local cur extglob
@@ -213,7 +256,8 @@ complete -F _create_new_project_completion create_new_project np
 
 
 # Some aliases
-alias gp=go_to_project
-alias np=create_new_project
-alias lp=link_dependency
+alias  gp=go_to_project
+alias cdp=go_to_dependent_project
+alias  np=create_new_project
+alias  lp=link_dependency
 alias lsp=list_projects
