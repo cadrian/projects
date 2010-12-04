@@ -16,17 +16,15 @@ export PROJECT_DEFAULT_PATH="$PATH"
 export PROJECT_DEFAULT_PS1="$PS1"
 
 
-# Find the last saved project
-if [ -h $PROJECT_CURRENT ]; then
-    CURRENT_PROJECT=$(ls -l $PROJECT_CURRENT | sed 's/^.*->\s*//')
-    CURRENT_PROJECT=${CURRENT_PROJECT##*/}
-fi
-
-
 # Go to the given project.
 # $1 => project name (defaults to current project, if it exists)
 go_to_project() {
     if [ -z "$1" ]; then
+	# Find the last saved project
+	if [ -h $PROJECT_CURRENT ]; then
+	    CURRENT_PROJECT=$(ls -l $PROJECT_CURRENT | sed 's/^.*->\s*//')
+	    CURRENT_PROJECT=${CURRENT_PROJECT##*/}
+	fi
 	if [ -z "$CURRENT_PROJECT" ]; then
 	    echo "Must provide: project name" >&2
 	    echo "Not enough arguments: aborting." >&2
@@ -178,15 +176,18 @@ list_projects() {
 
 # Bash completion
 _list_projects() {
-    find $PROJECTS_DIR -mindepth 1 -maxdepth 1 -type d | sed 's!^'"$PROJECTS_DIR/"'!!'
+    find $PROJECTS_DIR -mindepth 1 -maxdepth 1 -type d | sed 's!^'"$PROJECTS_DIR/"'!!' | sort -u
 }
 
 _list_types() {
-    find $PROJECT_PACK/types -name \*.sh -executable | sed 's!^'"$PROJECT_PACK/types/"'\(.*\)\.sh$!\1!'
+    find $PROJECT_PACK/types -name \*.sh -executable | sed 's!^'"$PROJECT_PACK/types/"'\(.*\)\.sh$!\1!' | sort -u
 }
 
 _list_deps() {
-    test -d $PROJECTS_DIR/$CURRENT_PROJECT/dep && find $PROJECTS_DIR/$CURRENT_PROJECT/dep -mindepth 1 -maxdepth 1 -type d | sed 's!^'"$PROJECTS_DIR/$CURRENT_PROJECT/dep"'!!'
+    {
+	test -d $PROJECTS_DIR/$CURRENT_PROJECT/dep && find $PROJECTS_DIR/$CURRENT_PROJECT/dep -mindepth 1 -maxdepth 1 -type l | sed 's!^'"$PROJECTS_DIR/$CURRENT_PROJECT/dep/"'!!'
+	echo $CURRENT_PROJECT
+    } | sort -u
 }
 
 _go_to_project_completion() {
@@ -227,7 +228,7 @@ _go_to_dependent_project_completion() {
 	shopt -u extglob
     fi
 }
-complete -F _go_to_project_completion go_to_dependent_project cdp
+complete -F _go_to_dependent_project_completion go_to_dependent_project cdp
 
 _create_new_project_completion() {
     local cur extglob
