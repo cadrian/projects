@@ -54,13 +54,23 @@ make_emacs() {
 (defun $PROJECT_NAME-project-startup ()
   (autoload 'camelCase-mode "camelCase-mode" nil t))
 
+(load-library "hideshow")
+(defadvice goto-line (after expand-after-goto-line
+                            activate compile)
+
+    "hideshow-expand affected block when using goto-line in a collapsed buffer"
+    (save-excursion
+       (hs-show-block)))
+
 (add-hook 'c-mode-hook
   (lambda ()
+    (hs-minor-mode)
     (c-subword-mode t)
     (setq tab-width 4)))
 
 (add-hook 'java-mode-hook
   (lambda ()
+    (hs-minor-mode)
     (c-subword-mode t)
     (setq tab-width 4)))
 
