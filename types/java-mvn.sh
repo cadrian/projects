@@ -111,7 +111,7 @@ export PATH=\$({
     echo \$PROJECT_DEFAULT_PATH
 )
 
-$PROJECT/bin/tag_all.sh
+$PROJECT/bin/tag_all.sh -V | grep '^OPENING' | awk '{printf("%s'"\$(tput el)"'\r", \$0);} END {printf("'"\$(tput el)"'\n");}'
 
 set_build
 EOF
