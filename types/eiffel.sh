@@ -43,7 +43,8 @@ make_emacs() {
 
 (defun tabs-eiffel-mode-hook ()
  (message " Loading tabs-eiffel-mode-hook...")
- (setq indent-tabs-mode t))
+ (setq eif-set-tab-width-flag nil)
+ (setq eif-indent-increment 3))
 (add-hook 'eiffel-mode-hook 'tabs-eiffel-mode-hook)
 
 (set-frame-name "$PROJECT_NAME")
@@ -85,6 +86,10 @@ export PATH=\$({
     } | awk '{printf("%s:", \$0)}'
     echo \$PROJECT_DEFAULT_PATH
 )
+
+fe() {
+    find $(pwd) \( -name CVS -o -name .svn -o -name .git \) -prune -o -name \*.e -exec grep -Hn "\$@" {} \;
+}
 
 $PROJECT/bin/tag_all.sh -V | grep '^OPENING' | awk '{printf("%s'"\$(tput el)"'\r", \$0);} END {printf("'"\$(tput el)"'\n");}'
 EOF

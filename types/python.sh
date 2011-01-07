@@ -87,7 +87,7 @@ export PYTHONPATH=\$({
 $PROJECT/bin/tag_all.sh -V | grep '^OPENING' | awk '{printf("%s'"\$(tput el)"'\r", \$0);} END {printf("'"\$(tput el)"'\n");}'
 
 fpy() {
-    find $(pwd) \( -name CVS -o -name .svn -o -name .git \) -prune -o -name \*.py -exec grep -Hn "$@" {} \;
+    find $(pwd) \( -name CVS -o -name .svn -o -name .git \) -prune -o -name \*.py -exec grep -Hn "\$@" {} \;
 }
 
 EOF

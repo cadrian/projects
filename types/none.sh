@@ -5,25 +5,8 @@ PROJECT=$PROJECTS_DIR/$1
 
 
 make_emacs() {
-    MALABAR=$HOME/.emacs.d/malabar-1.4.0
-
     cat > $PROJECT/project.el <<EOF
-(add-to-list 'load-path "$PROJECT_PACK/site-lisp")
-(add-to-list 'load-path "$PROJECT_PACK/site-lisp/mk-project")
-(add-to-list 'load-path "$MALABAR/lisp")
-
-(setq semantic-default-submodes '(global-semantic-idle-scheduler-mode
-                                  global-semanticdb-minor-mode
-                                  global-semantic-idle-summary-mode
-                                  global-semantic-mru-bookmark-mode))
-(semantic-mode 1)
-(require 'malabar-mode)
-(setq malabar-groovy-lib-dir "$MALABAR/lib")
-(add-hook 'malabar-mode-hook
-  (lambda ()
-    (add-hook 'after-save-hook 'malabar-compile-file-silently
-               nil t)))
-(add-to-list 'auto-mode-alist '("\\\\.java\\\\'" . malabar-mode))
+(setq load-path (cons "$PROJECT_PACK/site-lisp" (cons "$PROJECT_PACK/site-lisp/mk-project" load-path)))
 
 (require 'mk-project)
 (global-set-key (kbd "C-c p c") 'project-compile)
@@ -41,35 +24,18 @@ make_emacs() {
 
 (project-def "$PROJECT_NAME-project"
       '((basedir          "$PROJECT/dev/")
-        (src-patterns     ("*.java" "*.c" "*.cpp" "*.h"))
-        (ignore-patterns  ("*.o"))
+        (src-patterns     ("*.ly"))
+        (ignore-patterns  ("*.aux" "*.dvi" "*.log"))
         (tags-file        "$PROJECT/.mk/TAGS")
         (file-list-cache  "$PROJECT/.mk/files")
         (open-files-cache "$PROJECT/.mk/open-files")
         (vcs              git)
-        (compile-cmd      "mvn")
+        (compile-cmd      nil)
         (startup-hook     $PROJECT_NAME-project-startup)
         (shutdown-hook    nil)))
 
 (defun $PROJECT_NAME-project-startup ()
-  (autoload 'camelCase-mode "camelCase-mode" nil t))
-
-(add-hook 'c-mode-hook
-  (lambda ()
-    (c-subword-mode t)
-    (setq tab-width 4)))
-
-(add-hook 'java-mode-hook
-  (lambda ()
-    (c-subword-mode t)
-    (setq tab-width 4)))
-
-(add-hook 'kill-emacs-hook
-  (lambda ()
-    (if (malabar-groovy-live-p)
-        (malabar-groovy-stop))))
-
-(load "fix-java.el")
+  nil)
 
 (set-frame-name "$PROJECT_NAME")
 (project-load "$PROJECT_NAME-project")
@@ -84,7 +50,6 @@ make_tags() {
 
 export PROJECT=\${PROJECT:-$PROJECT}
 export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
-etags \$@ -f \$TAGS --language-force=Java --Java-kinds=-f \$(find \$PROJECT/dev/. -name .svn -prune -o -name CVS -prune -o -name \*.java -print)
 
 if [ -d \$PROJECT/dep ]; then
     for dep in \$(echo \$PROJECT/dep/*); do
@@ -105,7 +70,7 @@ make_go() {
 
 export PATH=\$({
         echo $PROJECT/bin
-        find -L $PROJECT/dev/ -type d -name bin | sort
+        find -L $PROJECT/dev -type d -name bin | sort
         test -d $PROJECT/dep && find -L $PROJECT/dep -type d -name bin | sort
     } | awk '{printf("%s:", \$0)}'
     echo \$PROJECT_DEFAULT_PATH
@@ -113,11 +78,10 @@ export PATH=\$({
 
 $PROJECT/bin/tag_all.sh -V | grep '^OPENING' | awk '{printf("%s'"\$(tput el)"'\r", \$0);} END {printf("'"\$(tput el)"'\n");}'
 
-fj() {
-    find $(pwd) \( -name CVS -o -name .svn -o -name .git \) -prune -o -name \*.java -exec grep -Hn "\$@" {} \;
+fly() {
+    find $(pwd) \( -name CVS -o -name .svn -o -name .git \) -prune -o \( -name \*.ly -o -name \*.ily \) -exec grep -Hn "\$@" {} \;
 }
 
-set_build
 EOF
 }
 
