@@ -7,23 +7,34 @@ PROJECT_DEVDIR=$2
 
 make_emacs() {
     MALABAR=$HOME/.emacs.d/malabar-1.4.0
+    PMD=$HOME/.emacs.d/pmd-4.2.5
+    JAVA=$(which java)
 
     cat > $PROJECT/project.el <<EOF
 (add-to-list 'load-path "$PROJECT_PACK/site-lisp")
 (add-to-list 'load-path "$PROJECT_PACK/site-lisp/mk-project")
 (add-to-list 'load-path "$MALABAR/lisp")
 
+(require 'pmd)
+(setq pmd-java-home "$JAVA")
+(setq pmd-home "$PMD")
+(setq pmd-ruleset-list (list "basic" "braces" "clone" "codesize" "coupling" "design" "finalizers" "imports" "junit" "naming" "optimizations" "strings" "unusedcode"))
+(global-set-key (kbd "M-g x") 'pmd-current-buffer)
+
 (setq semantic-default-submodes '(global-semantic-idle-scheduler-mode
                                   global-semanticdb-minor-mode
                                   global-semantic-idle-summary-mode
                                   global-semantic-mru-bookmark-mode))
-(semantic-mode 1)
+
 (require 'malabar-mode)
 (setq malabar-groovy-lib-dir "$MALABAR/lib")
 (add-hook 'malabar-mode-hook
   (lambda ()
-    (add-hook 'after-save-hook 'malabar-compile-file-silently
-               nil t)))
+    (add-hook 'after-save-hook
+              (lambda ()
+                (malabar-compile-file-silently)
+                (pmd-current-buffer))
+              nil t)))
 (add-to-list 'auto-mode-alist '("\\\\.java\\\\'" . malabar-mode))
 
 (require 'mk-project)
@@ -55,15 +66,26 @@ make_emacs() {
 (defun $PROJECT_NAME-project-startup ()
   (autoload 'camelCase-mode "camelCase-mode" nil t))
 
+(load-library "hideshow")
+(defadvice goto-line (after expand-after-goto-line
+                            activate compile)
+
+    "hideshow-expand affected block when using goto-line in a collapsed buffer"
+    (save-excursion
+       (hs-show-block)))
+
 (add-hook 'c-mode-hook
   (lambda ()
+    (hs-minor-mode)
     (c-subword-mode t)
     (setq tab-width 4)))
 
 (add-hook 'java-mode-hook
   (lambda ()
+    (hs-minor-mode)
     (c-subword-mode t)
-    (setq tab-width 4)))
+    (setq tab-width 4)
+    (semantic-mode t)))
 
 (add-hook 'kill-emacs-hook
   (lambda ()
