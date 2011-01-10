@@ -2,6 +2,7 @@
 
 PROJECT_NAME=$1
 PROJECT=$PROJECTS_DIR/$1
+PROJECT_DEVDIR=$2
 
 
 make_emacs() {
@@ -23,9 +24,9 @@ make_emacs() {
 (global-set-key (kbd "C-c p t") 'project-tags)
 
 (project-def "$PROJECT_NAME-project"
-      '((basedir          "$PROJECT/dev/")
+      '((basedir          "$PROJECT_DEVDIR")
         (src-patterns     ("*.ly"))
-        (ignore-patterns  ("*.aux" "*.dvi" "*.log"))
+        (ignore-patterns  ("*.aux" "*.dvi" "*.log" "*.pdf" "*.eps"))
         (tags-file        "$PROJECT/.mk/TAGS")
         (file-list-cache  "$PROJECT/.mk/files")
         (open-files-cache "$PROJECT/.mk/open-files")
@@ -50,6 +51,8 @@ make_tags() {
 
 export PROJECT=\${PROJECT:-$PROJECT}
 export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
+export PROJECT_DEVDIR=\$(ls -l \$PROJECT/dev | sed 's/^.*-> //')
+etags \$@ -f \$TAGS --language-force=Tex --extra=+f --fields=+ailmnSz \$(find \$PROJECT_DEVDIR -name \*.ly) 2>/dev/null|| echo "Brand new project: no file tagged."
 
 if [ -d \$PROJECT/dep ]; then
     for dep in \$(echo \$PROJECT/dep/*); do

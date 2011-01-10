@@ -2,6 +2,7 @@
 
 PROJECT_NAME=$1
 PROJECT=$PROJECTS_DIR/$1
+PROJECT_DEVDIR=$2
 
 
 make_emacs() {
@@ -23,7 +24,7 @@ make_emacs() {
 (global-set-key (kbd "C-c p t") 'project-tags)
 
 (project-def "$PROJECT_NAME-project"
-      '((basedir          "$PROJECT/dev/")
+      '((basedir          "$PROJECT_DEVDIR")
         (src-patterns     ("*.e"))
         (ignore-patterns  ("*.o"))
         (tags-file        "$PROJECT/.mk/TAGS")
@@ -50,7 +51,8 @@ make_tags() {
 
 export PROJECT=\${PROJECT:-$PROJECT}
 export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
-etags \$@ -f \$TAGS --language-force=python --python-kinds=cfm \$(find \$PROJECT/dev/. -name \*.py) 2>/dev/null || echo "Brand new project: no file tagged."
+export PROJECT_DEVDIR=\$(ls -l $PROJECT/dev | sed 's/^.*-> //')
+etags \$@ -f \$TAGS --language-force=python --python-kinds=cfm \$(find \$PROJECT_DEVDIR -name \*.py) 2>/dev/null || echo "Brand new project: no file tagged."
 
 if [ -d \$PROJECT/dep ]; then
     for dep in \$(echo \$PROJECT/dep/*); do
@@ -71,14 +73,14 @@ make_go() {
 
 export PATH=\$({
         echo $PROJECT/bin
-        find -L $PROJECT/dev -type d -name bin | sort
+        find -L $PROJECT/dev/ -type d -name bin | sort
         test -d $PROJECT/dep && find -L $PROJECT/dep -type d -name bin | sort
     } | awk '{printf("%s:", \$0)}'
     echo \$PROJECT_DEFAULT_PATH
 )
 
 export PYTHONPATH=\$({
-        $PROJECT_PACK/utils/modules_finder.py \$(find -L $PROJECT/dev -name __init__.py -exec dirname {} \; | sort)
+        $PROJECT_PACK/utils/modules_finder.py \$(find -L $PROJECT/dev/ -name __init__.py -exec dirname {} \; | sort)
         test -d $PROJECT/dep && $PROJECT_PACK/utils/modules_finder.py \$(find -L $PROJECT/dep -name __init__.py -exec dirname {} \; | sort) | sort
     } | awk '{printf("%s:", \$0)}'
     echo
