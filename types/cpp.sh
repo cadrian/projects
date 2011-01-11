@@ -53,13 +53,13 @@ export PROJECT=\${PROJECT:-$PROJECT}
 export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
 export PROJECT_DEVDIR=\$(ls -l $PROJECT/dev | sed 's/^.*-> //')
 etags \$@ -f \$TAGS --language-force=C --extra=+p --fields=+ailmnSz \$(find \$PROJECT_DEVDIR -name \*.[ch]) 2>/dev/null|| echo "Brand new project: no file tagged."
-etags \$@ -f \$TAGS --language-force='C++' --extra=+p --fields=+ailmnSz \$(find \$PROJECT_DEVDIR -name \*.cpp) 2>/dev/null|| echo "Brand new project: no file tagged."
+etags -a \$@ -f \$TAGS --language-force='C++' --extra=+p --fields=+ailmnSz \$(find \$PROJECT_DEVDIR -name \*.cpp) 2>/dev/null|| echo "Brand new project: no file tagged."
 
 if [ -d \$PROJECT/dep ]; then
     for dep in \$(echo \$PROJECT/dep/*); do
         if [ -h \$dep ]; then
             project=$PROJECTS_DIR/\${dep#\$PROJECT/dep/}
-            PROJECT=\$project \$project/bin/tag_all.sh -a
+            PROJECT=\$project \$project/bin/tag_all.sh -a \$@
         fi
     done
 fi
@@ -84,7 +84,7 @@ fc() {
     find $(pwd) \( -name CVS -o -name .svn -o -name .git \) -prune -o \( -name \*.[ch] -o -name \*.cpp \) -exec grep -Hn "\$@" {} \;
 }
 
-$PROJECT/bin/tag_all.sh -V | grep '^OPENING' | awk '{printf("%s'"\$(tput el)"'\r", \$0);} END {printf("'"\$(tput el)"'\n");}'
+$PROJECT/bin/tag_all.sh -V | grep '^OPENING' | awk '{if (length($2) < 80) {a=$2;} else {a=substr($2, length($2)-76); gsub("^", "...", a);} printf("%-s'"$(tput el)"'\r", a); fflush();} END {printf("'"$(tput el)"'\n");}'
 EOF
 }
 
