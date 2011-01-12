@@ -79,7 +79,7 @@ export PATH=\$({
     echo \$PROJECT_DEFAULT_PATH
 )
 
-$PROJECT/bin/tag_all.sh -V | grep '^OPENING' | awk '{if (length($2) < 80) {a=$2;} else {a=substr($2, length($2)-76); gsub("^", "...", a);} printf("%-s'"$(tput el)"'\r", a); fflush();} END {printf("'"$(tput el)"'\n");}'
+$PROJECT/bin/tag_all.sh -V | grep '^OPENING' | awk '{if (length(\$2) < 80) {a=\$2;} else {a=substr(\$2, length(\$2)-76); gsub("^", "...", a);} printf("%-s'"$(tput el)"'\r", a); fflush();} END {printf("'"$(tput el)"'\n");}'
 
 fly() {
     find $(pwd) \( -name CVS -o -name .svn -o -name .git \) -prune -o \( -name \*.ly -o -name \*.ily \) -exec grep -Hn "\$@" {} \;
