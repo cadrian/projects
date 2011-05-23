@@ -139,7 +139,8 @@ fj() {
     find \$(pwd) \\( -name CVS -o -name .svn -o -name .git \\) -prune -o -name \\*.java -exec grep -Hn "\$@" {} \\;
 }
 
-$PROJECT/bin/tag_all.sh -V | grep '^OPENING' | awk -vcols=\$(stty size|awk '{print \$2}') '{if (length(\$2) < cols) {a=\$2;} else {a=substr(\$2, length(\$2)-cols-4); sub("^", "...", a);} printf("%-s'"$(tput el)"'\\r", a); fflush();} END {printf("'"$(tput el)"'\\n");}'
+cols=\$(stty size|awk '{print \$2}')
+$PROJECT/bin/tag_all.sh -V | grep '^OPENING' | awk -vcols=\$cols '{if (length(\$2) < cols) {a=\$2;} else {a=substr(\$2, length(\$2)-cols-4); sub("^", "...", a);} printf("%-s'"$(tput el)"'\\r", a); fflush();} END {printf("'"$(tput el)"'\\n");}'
 
 EOF
 }
