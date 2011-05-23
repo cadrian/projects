@@ -108,7 +108,7 @@ make_tags() {
 export PROJECT=\${PROJECT:-$PROJECT}
 export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
 export PROJECT_DEVDIR=\$(ls -l $PROJECT/dev | sed 's/^.*-> //')
-etags \$@ -f \$TAGS --language-force=Java --Java-kinds=-f \$(find \$PROJECT -name .svn -prune -o -name CVS -prune -o -name \*.java -print)
+etags \$@ -f \$TAGS --language-force=Java --Java-kinds=-f \$(find \$PROJECT_DEVDIR -name .svn -prune -o -name CVS -prune -o -name \\*.java -print)
 
 if [ -d \$PROJECT/dep ]; then
     for dep in \$(echo \$PROJECT/dep/*); do
@@ -135,13 +135,12 @@ export PATH=\$({
     echo \$PROJECT_DEFAULT_PATH
 )
 
-$PROJECT/bin/tag_all.sh -V | grep '^OPENING' | awk '{if (length(\$2) < 80) {a=\$2;} else {a=substr(\$2, length(\$2)-76); gsub("^", "...", a);} printf("%-s'"$(tput el)"'\r", a); fflush();} END {printf("'"$(tput el)"'\n");}'
-
 fj() {
-    find $(pwd) \( -name CVS -o -name .svn -o -name .git \) -prune -o -name \*.java -exec grep -Hn "\$@" {} \;
+    find \$(pwd) \\( -name CVS -o -name .svn -o -name .git \\) -prune -o -name \\*.java -exec grep -Hn "\$@" {} \\;
 }
 
-set_build
+$PROJECT/bin/tag_all.sh -V | grep '^OPENING' | awk -vcols=\$(stty size|awk '{print \$2}') '{if (length(\$2) < cols) {a=\$2;} else {a=substr(\$2, length(\$2)-cols-4); sub("^", "...", a);} printf("%-s'"$(tput el)"'\\r", a); fflush();} END {printf("'"$(tput el)"'\\n");}'
+
 EOF
 }
 
