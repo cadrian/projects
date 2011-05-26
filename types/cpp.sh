@@ -85,7 +85,7 @@ fc() {
 }
 
 cols=\$(stty size|awk '{print \$2}')
-$PROJECT/bin/tag_all.sh -V | grep '^OPENING' | awk -vcols=\$cols '{if (length(\$2) < cols) {a=\$2;} else {a=substr(\$2, length(\$2)-cols-4); sub("^", "...", a);} printf("%-s'"$(tput el)"'\\r", a); fflush();} END {printf("'"$(tput el)"'\\n");}'
+$PROJECT/bin/tag_all.sh -V | grep '^OPENING' | awk -vcols=\$cols '{if (length(\$2) < cols) {a=\$2;} else {a=substr(\$2, length(\$2)-cols+4); sub("^", "...", a);} printf("%-s'"$(tput el)"'\\r", a); fflush();} END {printf("'"$(tput el)"'\\n");}'
 EOF
 }
 
