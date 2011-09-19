@@ -16,6 +16,9 @@ export PROJECT_DEFAULT_PATH="$PATH"
 export PROJECT_DEFAULT_PS1="$PS1"
 
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# User functions
+
 # Go to the given project.
 # $1 => project name (defaults to current project, if it exists)
 go_to_project() {
@@ -90,7 +93,7 @@ go_to_dependent_project() {
 create_new_project() {
     PROJECT=$PROJECTS_DIR/$1
     PROJECT_FACTORY=$PROJECT_PACK/types/$2.sh
-    PROJECT_DEVDIR=$(cd $3 && pwd)
+    PROJECT_DEVDIR=$(cd $3/. && pwd)
 
     if [ -z "$1" -o -z "$2" -o -z "$3" ]; then
         echo "Must provide: project name, project type, and project dev directory" >&2
@@ -123,6 +126,30 @@ create_new_project() {
     echo $2 > $PROJECT/type
 
     $PROJECT_FACTORY $1 $PROJECT_DEVDIR
+}
+
+
+# Update an existing project with the latest changes in the project manager.
+update_project() {
+    PROJECT=$PROJECTS_DIR/$CURRENT_PROJECT
+
+    if [ -z $CURRENT_PROJECT ]; then
+        echo "Must be in a project" >&2
+        return 1
+    fi
+
+    if [ \( ! -d $PROJECT \) -o \( ! -d $PROJECT/bin \) -o \( ! -h $PROJECT/dev \) ]; then
+        echo "Unknown or invalid project $CURRENT_PROJECT: aborting." >&2
+        return 1
+    fi
+
+    echo "Please wait, updating project $CURRENT_PROJECT."
+
+    type=$(< $PROJECT/type)
+    PROJECT_FACTORY=$PROJECT_PACK/types/$type.sh
+    PROJECT_DEVDIR=$(ls -l $PROJECT/dev | sed 's/^.*->\s*//')
+
+    $PROJECT_FACTORY $CURRENT_PROJECT $PROJECT_DEVDIR
 }
 
 
@@ -256,9 +283,69 @@ _create_new_project_completion() {
 complete -F _create_new_project_completion create_new_project np
 
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Useful functions
+
+fc() {
+    find $(pwd) \( -name CVS -o -name .svn -o -name .git \) -prune -o \( -name \*.[ch] -o -name \*.[ch]pp \) -exec grep -Hn "$@" {} \;
+}
+
+fe() {
+    find $(pwd) \( -name CVS -o -name .svn -o -name .git \) -prune -o -name \*.e -exec grep -Hn "$@" {} \;
+}
+
+fj() {
+    find $(pwd) \( -name CVS -o -name .svn -o -name .git \) -prune -o -name \*.java -exec grep -Hn "$@" {} \;
+}
+
+fpy() {
+    find $(pwd) \( -name CVS -o -name .svn -o -name .git \) -prune -o -name \*.py -exec grep -Hn "$@" {} \;
+}
+
+fly() {
+    find $(pwd) \( -name CVS -o -name .svn -o -name .git \) -prune -o \( -name \*.ly -o -name \*.ily \) -exec grep -Hn "$@" {} \;
+}
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Some aliases
+
 alias  gp=go_to_project
 alias cdp=go_to_dependent_project
 alias  np=create_new_project
 alias  lp=link_dependency
 alias lsp=list_projects
+alias upp=update_project
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Internal functions
+
+_project_tag_all() {
+    project=$1
+    nb=$($project/bin/find_all.sh | wc -l)
+    cols=$(stty size|awk '{print $2}')
+    $project/bin/tag_all.sh -V | grep '^OPENING' | awk -vcols=$cols -vsize=30 -vmax=$nb '
+       {
+          fill = int(size * NR / max + .5);
+          printf(" '`tput bold`'%3.1f%%'`tput sgr0`'\t'`tput setab 6`'", 100*NR/max);
+          for (i=0; i < fill; i++)
+             printf(" ");
+          printf("'`tput setab 4`'");
+          for (i=fill; i < size; i++)
+             printf(" ");
+          printf("'`tput sgr0`' ");
+
+          if (length($2) < cols) {
+             a = $2;
+          } else {
+             a = substr($2, length($2) - cols - size - 4);
+             sub("^", "...", a);
+          }
+          printf("%-s'"$(tput el)"'\r", a);
+          fflush();
+       }
+       END {
+          printf("'"$(tput el)"'\n");
+       }'
+}

@@ -63,8 +63,26 @@ if [ -d \$PROJECT/dep ]; then
     done
 fi
 EOF
-    chmod +x $PROJECT/bin/tag_all.sh
-    $PROJECT/bin/tag_all.sh
+
+    cat > $PROJECT/bin/find_all.sh <<EOF
+#!/usr/bin/env bash
+
+export PROJECT=\${PROJECT:-$PROJECT}
+export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
+export PROJECT_DEVDIR=\$(ls -l \$PROJECT/dev | sed 's/^.*-> //')
+find \$PROJECT_DEVDIR -name \\*.ly 2>/dev/null
+
+if [ -d \$PROJECT/dep ]; then
+    for dep in \$(echo \$PROJECT/dep/*); do
+        if [ -h \$dep ]; then
+            project=$PROJECTS_DIR/\${dep#\$PROJECT/dep/}
+            PROJECT=\$project \$project/bin/tag_all.sh -a \$@
+        fi
+    done
+fi
+EOF
+
+    chmod +x $PROJECT/bin/tag_all.sh $PROJECT/bin/find_all.sh
 }
 
 
@@ -79,18 +97,12 @@ export PATH=\$({
     echo \$PROJECT_DEFAULT_PATH
 )
 
-fly() {
-    find \$(pwd) \\( -name CVS -o -name .svn -o -name .git \\) -prune -o \\( -name \\*.ly -o -name \\*.ily \\) -exec grep -Hn "\$@" {} \\;
-}
-
-cols=\$(stty size|awk '{print \$2}')
-$PROJECT/bin/tag_all.sh -V | grep '^OPENING' | awk -vcols=\$cols '{if (length(\$2) < cols) {a=\$2;} else {a=substr(\$2, length(\$2)-cols+4); sub("^", "...", a);} printf("%-s'"$(tput el)"'\\r", a); fflush();} END {printf("'"$(tput el)"'\\n");}'
-
+_project_tag_all $PROJECT
 EOF
 }
 
 
-mkdir $PROJECT/.mk
+test -d $PROJECT/.mk || mkdir $PROJECT/.mk
 make_emacs
 make_tags
 make_go
