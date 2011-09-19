@@ -97,12 +97,12 @@ export PATH=\$({
     echo \$PROJECT_DEFAULT_PATH
 )
 
-export PYTHONPATH=\$({
-        $PROJECT_PACK/utils/modules_finder.py \$(find -L $PROJECT/dev/ -name __init__.py -exec dirname {} \; | sort)
-        test -d $PROJECT/dep && $PROJECT_PACK/utils/modules_finder.py \$(find -L $PROJECT/dep -name __init__.py -exec dirname {} \; | sort) | sort
-    } | awk '{printf("%s:", \$0)}'
-    echo
-)
+#export PYTHONPATH=\$({
+#        $PROJECT_PACK/utils/modules_finder.py \$(find -L $PROJECT/dev/ -name __init__.py -exec dirname {} \; | sort)
+#        test -d $PROJECT/dep && $PROJECT_PACK/utils/modules_finder.py \$(find -L $PROJECT/dep -name __init__.py -exec dirname {} \; | sort) | sort
+#    } | awk '{printf("%s:", \$0)}'
+#    echo
+#)
 
 _project_tag_all $PROJECT
 EOF
