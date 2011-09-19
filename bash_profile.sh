@@ -326,9 +326,12 @@ _project_tag_all() {
     nb=$($project/bin/find_all.sh | wc -l)
     cols=$(stty size|awk '{print $2}')
     $project/bin/tag_all.sh -V | grep '^OPENING' | awk -vcols=$cols -vsize=30 -vmax=$nb '
+       BEGIN {
+          len = cols - size - 6;
+       }
        {
           fill = int(size * NR / max + .5);
-          printf(" '`tput bold`'%3.1f%%'`tput sgr0`'\t'`tput setab 6`'", 100*NR/max);
+          printf("'`tput bold`'%3d%%'`tput sgr0`' '`tput setab 6`'", 100*NR/max + .5);
           for (i=0; i < fill; i++)
              printf(" ");
           printf("'`tput setab 4`'");
@@ -336,10 +339,10 @@ _project_tag_all() {
              printf(" ");
           printf("'`tput sgr0`' ");
 
-          if (length($2) < cols) {
+          if (length($2) < len) {
              a = $2;
           } else {
-             a = substr($2, length($2) - cols - size - 4);
+             a = substr($2, length($2) - len + 4);
              sub("^", "...", a);
           }
           printf("%-s'"$(tput el)"'\r", a);
