@@ -132,7 +132,7 @@ if [ -d \$PROJECT/dep ]; then
     for dep in \$(echo \$PROJECT/dep/*); do
         if [ -h \$dep ]; then
             project=$PROJECTS_DIR/\${dep#\$PROJECT/dep/}
-            PROJECT=\$project \$project/bin/tag_all.sh -a \$@
+            PROJECT=\$project \$project/bin/find_all.sh -a \$@
         fi
     done
 fi
