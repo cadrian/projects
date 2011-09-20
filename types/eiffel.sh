@@ -4,6 +4,8 @@ PROJECT_NAME=$1
 PROJECT=$PROJECTS_DIR/$1
 PROJECT_DEVDIR=$2
 
+. $PROJECT_PACK/bash_profile.sh
+
 
 make_emacs() {
     cat > $PROJECT/project.el <<EOF

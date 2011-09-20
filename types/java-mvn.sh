@@ -4,6 +4,8 @@ PROJECT_NAME=$1
 PROJECT=$PROJECTS_DIR/$1
 PROJECT_DEVDIR=$2
 
+. $PROJECT_PACK/bash_profile.sh
+
 
 make_emacs() {
     MALABAR=$HOME/.emacs.d/malabar-1.4.0
@@ -139,6 +141,7 @@ fi
 EOF
 
     chmod +x $PROJECT/bin/tag_all.sh $PROJECT/bin/find_all.sh
+    _project_tag_all $PROJECT
 }
 
 
