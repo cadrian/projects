@@ -75,7 +75,7 @@ go_to_dependent_project() {
         return 1
     fi
 
-    if [ -z "$1" ]; then
+    if [ -z "$1" -o "$1" == "$CURRENT_PROJECT" ]; then
         dep=dev
     else
         dep=dep/$1
