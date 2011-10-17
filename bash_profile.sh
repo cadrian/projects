@@ -77,13 +77,15 @@ go_to_dependent_project() {
 
     if [ -z "$1" -o "$1" == "$CURRENT_PROJECT" ]; then
         dep=dev
+        proj=$CURRENT_PROJECT
     else
         dep=dep/$1
+        proj=$1
     fi
 
     PROJECT=$PROJECTS_DIR/$CURRENT_PROJECT
     cd $(readlink $PROJECT/$dep)
-    test -x $PROJECTS_DIR/$1/godep && . $PROJECTS_DIR/$1/godep
+    test -x $PROJECTS_DIR/$proj/godep && . $PROJECTS_DIR/$proj/godep
 }
 
 
