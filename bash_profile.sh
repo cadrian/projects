@@ -83,7 +83,7 @@ go_to_dependent_project() {
 
     PROJECT=$PROJECTS_DIR/$CURRENT_PROJECT
     cd $(readlink $PROJECT/$dep)
-    test -x $PROJECT/$dep/godep && . $PROJECT/$dep/godep
+    test -x $PROJECTS_DIR/$1/godep && . $PROJECTS_DIR/$1/godep
 }
 
 
