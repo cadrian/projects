@@ -63,7 +63,7 @@ go_to_project() {
     cd $(find $PROJECT/dev -type l -exec readlink {} \;)
 
     export PATH="$PROJECT_DEFAULT_PATH"
-    test -x . $PROJECT/go && . $PROJECT/go
+    test -x $PROJECT/go && . $PROJECT/go
 }
 
 
@@ -83,7 +83,7 @@ go_to_dependent_project() {
 
     PROJECT=$PROJECTS_DIR/$CURRENT_PROJECT
     cd $(readlink $PROJECT/$dep)
-    test -x . $PROJECT/$dep/godep && . $PROJECT/$dep/godep
+    test -x $PROJECT/$dep/godep && . $PROJECT/$dep/godep
 }
 
 
