@@ -53,7 +53,7 @@ make_tags() {
 
 export PROJECT=\${PROJECT:-$PROJECT}
 export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
-export PROJECT_DEVDIR=\$(ls -l \$PROJECT/dev | sed 's/^.*-> //')
+export PROJECT_DEVDIR=\$(readlink \$PROJECT/dev)
 etags \$@ -f \$TAGS --language-force=C --extra=+p --fields=+ailmnSz \$(find \$PROJECT_DEVDIR -name \\*.[ch]) 2>/dev/null|| echo "Brand new project: no file tagged."
 etags -a \$@ -f \$TAGS --language-force='C++' --extra=+p --fields=+ailmnSz \$(find \$PROJECT_DEVDIR -name \\*.[ch]pp) 2>/dev/null|| echo "Brand new project: no file tagged."
 
@@ -72,7 +72,7 @@ EOF
 
 export PROJECT=\${PROJECT:-$PROJECT}
 export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
-export PROJECT_DEVDIR=\$(ls -l \$PROJECT/dev | sed 's/^.*-> //')
+export PROJECT_DEVDIR=\$(readlink \$PROJECT/dev)
 find \$PROJECT_DEVDIR -name \\*.[ch] 2>/dev/null
 find \$PROJECT_DEVDIR -name \\*.[ch]pp 2>/dev/null
 

@@ -150,7 +150,14 @@ update_project() {
 
     type=$(< $PROJECT/type)
     PROJECT_FACTORY=$PROJECT_PACK/types/$type.sh
-    PROJECT_DEVDIR=$(readlink $PROJECT/dev)
+
+    if [ -n "$1" ]; then
+        PROJECT_DEVDIR=$(cd $1/. && pwd)
+        rm $PROJECT/dev
+        ln -s $PROJECT_DEVDIR $PROJECT/dev
+    else
+        PROJECT_DEVDIR=$(readlink $PROJECT/dev)
+    fi
 
     $PROJECT_FACTORY $CURRENT_PROJECT $PROJECT_DEVDIR
 }
