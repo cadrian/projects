@@ -72,7 +72,7 @@ EOF
 export PROJECT=\${PROJECT:-$PROJECT}
 export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
 export PROJECT_DEVDIR=\$(ls -l \$PROJECT/dev | sed 's/^.*-> //')
-find \$PROJECT_DEVDIR -name \\*.ly 2>/dev/null
+find \$PROJECT_DEVDIR -name \\*.tex 2>/dev/null
 
 if [ -d \$PROJECT/dep ]; then
     for dep in \$(echo \$PROJECT/dep/*); do
