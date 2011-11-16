@@ -8,7 +8,7 @@ export PROJECTS_DIR=${PROJECTS_DIR:-$HOME/.projects}
 
 # Internal environment variables, don't change them
 export PROJECT_CURRENT=$PROJECTS_DIR/.@current
-export CURRENT_PROJECT=""
+export CURRENT_PROJECT=${CURRENT_PROJECT:-""}
 
 
 # Save some environment variables to restore them at each project change
@@ -25,7 +25,7 @@ go_to_project() {
     if [ -z "$1" ]; then
         # Find the last saved project
         if [ -h $PROJECT_CURRENT ]; then
-            CURRENT_PROJECT=$(ls -l $PROJECT_CURRENT | sed 's/^.*->\s*//')
+            CURRENT_PROJECT=$(find $PROJECT_CURRENT -type l -exec readlink {} \;)
             CURRENT_PROJECT=${CURRENT_PROJECT##*/}
         fi
         if [ -z "$CURRENT_PROJECT" ]; then
@@ -60,10 +60,10 @@ go_to_project() {
 
 
     export PS1="[$CURRENT_PROJECT] $PROJECT_DEFAULT_PS1"
-    cd $(ls -l $PROJECT/dev | sed 's/^.*->\s*//')
+    cd $(find $PROJECT/dev -type l -exec readlink {} \;)
 
     export PATH="$PROJECT_DEFAULT_PATH"
-    . $PROJECT/go
+    test -x $PROJECT/go && . $PROJECT/go
 }
 
 
@@ -75,14 +75,17 @@ go_to_dependent_project() {
         return 1
     fi
 
-    if [ -z "$1" ]; then
+    if [ -z "$1" -o "$1" == "$CURRENT_PROJECT" ]; then
         dep=dev
+        proj=$CURRENT_PROJECT
     else
         dep=dep/$1
+        proj=$1
     fi
 
     PROJECT=$PROJECTS_DIR/$CURRENT_PROJECT
-    cd $(ls -l $PROJECT/$dep | sed 's/^.*->\s*//')
+    cd $(readlink $PROJECT/$dep)
+    test -x $PROJECTS_DIR/$proj/godep && . $PROJECTS_DIR/$proj/godep
 }
 
 
@@ -147,7 +150,7 @@ update_project() {
 
     type=$(< $PROJECT/type)
     PROJECT_FACTORY=$PROJECT_PACK/types/$type.sh
-    PROJECT_DEVDIR=$(ls -l $PROJECT/dev | sed 's/^.*->\s*//')
+    PROJECT_DEVDIR=$(readlink $PROJECT/dev)
 
     $PROJECT_FACTORY $CURRENT_PROJECT $PROJECT_DEVDIR
 }
@@ -183,7 +186,7 @@ link_dependency() {
     echo "Please wait, linking project $1 to $CURRENT_PROJECT."
 
     test -d $PROJECT/dep || mkdir $PROJECT/dep
-    DEP_PROJECT_DEV=$(ls -l $DEP_PROJECT/dev | sed 's/^.*->\s*//')
+    DEP_PROJECT_DEV=$(readlink $DEP_PROJECT/dev)
     ln -s $DEP_PROJECT_DEV $PROJECT/dep/$1
 }
 
@@ -195,7 +198,7 @@ list_projects() {
     printf "$format" "----------------" "--------" "--------------------------------------------------------------------------------"
     for project in $PROJECTS_DIR/*; do
         if [ -d $project ]; then
-            printf "$format" ${project##*/} $(< $project/type) $(ls -l $project/dev | sed 's/^.*->\s*//')
+            printf "$format" ${project##*/} $(< $project/type) $(readlink $project/dev)
         fi
     done
 }

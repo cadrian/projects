@@ -104,6 +104,8 @@ export PATH=\$({
 
 _project_tag_all $PROJECT
 EOF
+
+    chmox +x $PROJECT/go
 }
 
 

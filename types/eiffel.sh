@@ -112,6 +112,8 @@ export PATH=\$({
 
 _project_tag_all $PROJECT
 EOF
+
+    chmod +x $PROJECT/go
 }
 
 
