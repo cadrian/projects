@@ -14,5 +14,5 @@ CACHE=${XDG_CACHE_HOME:-"$HOME/.cache"}/dmenu_project
     fi
 )
 if project=$(dmenu -b -i -p 'Project:' -fn fixed -nb '#3f3f3f' -nf ivory -sb '#285577' -sf white < "$CACHE"); then
-    exec xterm +bc +cm -cr white -cu -en 'utf-8' -fa Inconsolata -fs 9 -j -ms white -rightbar -rw -s -sb -si -sk -sl 4294967296 -sm -u8 -vb -wc +wf -w 4 -bd '#3f3f3f' -bg '#3f3f3f' -fg ivory -geometry 132x50 -title "Project: $project" -e bash -cli "go_to_project $project ; { emacs -g 132x50 & bash; }"
+    exec xterm +bc +cm -cr white -cu -en 'utf-8' -fa Inconsolata -fs 9 -j -ms white -rightbar -rw -s -sb -si -sk -sl 4294967296 -sm -u8 -vb -wc +wf -w 4 -bd '#3f3f3f' -bg '#3f3f3f' -fg ivory -geometry 132x50 -title "Project: $project" -e bash -cli ". $pack/bash_profile.sh ; go_to_project $project ; { emacs -g 132x50 & bash; }"
 fi
