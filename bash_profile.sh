@@ -339,7 +339,7 @@ _project_tag_all() {
        BEGIN {
           len = cols - size - 6;
        }
-       {
+       max > 0 {
           fill = int(size * NR / max + .5);
           printf("'`tput bold`'%3d%%'`tput sgr0`' '`tput setab 6`'", 100*NR/max + .5);
           for (i=0; i < fill; i++)
