@@ -96,7 +96,7 @@ make_emacs() {
 
 (load "fix-java.el")
 
-(set-frame-name "$PROJECT_NAME")
+(set-frame-name "Emacs: $PROJECT_NAME")
 (project-load "$PROJECT_NAME-project")
 (project-dired)
 EOF

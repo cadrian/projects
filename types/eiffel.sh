@@ -50,7 +50,7 @@ make_emacs() {
  (setq eif-indent-increment 3))
 (add-hook 'eiffel-mode-hook 'tabs-eiffel-mode-hook)
 
-(set-frame-name "$PROJECT_NAME")
+(set-frame-name "Emacs: $PROJECT_NAME")
 (project-load "$PROJECT_NAME-project")
 (project-dired)
 EOF

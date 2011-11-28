@@ -40,7 +40,7 @@ make_emacs() {
 (defun $PROJECT_NAME-project-startup ()
   t)
 
-(set-frame-name "$PROJECT_NAME")
+(set-frame-name "Emacs: $PROJECT_NAME")
 (project-load "$PROJECT_NAME-project")
 (project-dired)
 EOF
