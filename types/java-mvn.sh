@@ -96,7 +96,7 @@ make_emacs() {
 
 (load "fix-java.el")
 
-(set-frame-name "$PROJECT_NAME")
+(set-frame-name "Emacs: $PROJECT_NAME")
 (project-load "$PROJECT_NAME-project")
 (project-dired)
 EOF
@@ -109,7 +109,7 @@ make_tags() {
 
 export PROJECT=\${PROJECT:-$PROJECT}
 export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
-export PROJECT_DEVDIR=\$(ls -l \$PROJECT/dev | sed 's/^.*-> //')
+export PROJECT_DEVDIR=\$(readlink \$PROJECT/dev)
 etags \$@ -f \$TAGS --language-force=Java --Java-kinds=-f \$(find \$PROJECT_DEVDIR -name .svn -prune -o -name CVS -prune -o -name \\*.java -print)
 
 if [ -d \$PROJECT/dep ]; then
@@ -127,7 +127,7 @@ EOF
 
 export PROJECT=\${PROJECT:-$PROJECT}
 export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
-export PROJECT_DEVDIR=\$(ls -l \$PROJECT/dev | sed 's/^.*-> //')
+export PROJECT_DEVDIR=\$(readlink \$PROJECT/dev)
 find \$PROJECT_DEVDIR -name .svn -prune -o -name CVS -prune -o -name \\*.java -print 2>/dev/null
 
 if [ -d \$PROJECT/dep ]; then

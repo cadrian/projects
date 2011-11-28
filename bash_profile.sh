@@ -150,7 +150,14 @@ update_project() {
 
     type=$(< $PROJECT/type)
     PROJECT_FACTORY=$PROJECT_PACK/types/$type.sh
-    PROJECT_DEVDIR=$(readlink $PROJECT/dev)
+
+    if [ -n "$1" ]; then
+        PROJECT_DEVDIR=$(cd $1/. && pwd)
+        rm $PROJECT/dev
+        ln -s $PROJECT_DEVDIR $PROJECT/dev
+    else
+        PROJECT_DEVDIR=$(readlink $PROJECT/dev)
+    fi
 
     $PROJECT_FACTORY $CURRENT_PROJECT $PROJECT_DEVDIR
 }
@@ -332,7 +339,7 @@ _project_tag_all() {
        BEGIN {
           len = cols - size - 6;
        }
-       {
+       max > 0 {
           fill = int(size * NR / max + .5);
           printf("'`tput bold`'%3d%%'`tput sgr0`' '`tput setab 6`'", 100*NR/max + .5);
           for (i=0; i < fill; i++)

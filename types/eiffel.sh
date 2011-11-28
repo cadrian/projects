@@ -50,7 +50,7 @@ make_emacs() {
  (setq eif-indent-increment 3))
 (add-hook 'eiffel-mode-hook 'tabs-eiffel-mode-hook)
 
-(set-frame-name "$PROJECT_NAME")
+(set-frame-name "Emacs: $PROJECT_NAME")
 (project-load "$PROJECT_NAME-project")
 (project-dired)
 EOF
@@ -63,7 +63,7 @@ make_tags() {
 
 export PROJECT=\${PROJECT:-$PROJECT}
 export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
-export PROJECT_DEVDIR=\$(ls -l \$PROJECT/dev | sed 's/^.*-> //')
+export PROJECT_DEVDIR=\$(readlink \$PROJECT/dev)
 etags \$@ -f \$TAGS --language-force=Eiffel --extra=+f --fields=+ailmnSz \$(find \$PROJECT_DEVDIR -name \\*.e) 2>/dev/null|| echo "Brand new project: no file tagged."
 
 if [ -d \$PROJECT/dep ]; then
@@ -81,7 +81,7 @@ EOF
 
 export PROJECT=\${PROJECT:-$PROJECT}
 export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
-export PROJECT_DEVDIR=\$(ls -l \$PROJECT/dev | sed 's/^.*-> //')
+export PROJECT_DEVDIR=\$(readlink \$PROJECT/dev)
 find \$PROJECT_DEVDIR -name \\*.e 2>/dev/null
 
 if [ -d \$PROJECT/dep ]; then
