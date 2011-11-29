@@ -293,6 +293,37 @@ _create_new_project_completion() {
 complete -F _create_new_project_completion create_new_project np
 
 
+# Open a new tab in gnome-terminal, for the same project.
+project_tabbed() {
+    if [ -z "$CURRENT_PROJECT" ]; then
+        echo "Please go to some project first: aborting." >&2
+        return 1
+    fi
+
+    if [ -z "$WINDOWID" ]; then
+        echo "Not in a window: aborting." >&2
+        return 1
+    fi
+
+
+    class=$(xprop -id $WINDOWID WM_CLASS | awk -F'"' '{print $2}')
+    if WID=$(xdotool search --class "gnome-terminal" | grep $WINDOWID); then
+        :
+    else
+        echo "Not in a gnome-terminal: aborting." >&2
+        return 1
+    fi
+
+    xdotool windowfocus $WID
+    xdotool key ctrl+shift+t
+    wmctrl -i -a $WID
+    xdotool type "go_to_project $CURRENT_PROJECT"
+    xdotool key ctrl+j
+    xdotool type "cd $(pwd)"
+    xdotool key ctrl+j
+}
+
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Useful functions
 
@@ -326,6 +357,7 @@ alias  np=create_new_project
 alias  lp=link_dependency
 alias lsp=list_projects
 alias upp=update_project
+alias tab=project_tabbed
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
