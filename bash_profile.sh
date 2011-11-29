@@ -31,7 +31,7 @@ go_to_project() {
 
     if [ -z "$1" ]; then
         # Find the last saved project
-        if [ -h $PROJECT_CURRENT ]; then
+        if [ -z "$CURRENT_PROJECT" -a -h $PROJECT_CURRENT ]; then
             CURRENT_PROJECT=$(find $PROJECT_CURRENT -type l -exec readlink {} \;)
             CURRENT_PROJECT=${CURRENT_PROJECT##*/}
         fi
@@ -300,6 +300,28 @@ _create_new_project_completion() {
 complete -F _create_new_project_completion create_new_project np
 
 
+#internals for opening a new tab. Used by project_tabbed() below and by the new_tab.sh script
+_project_tabbed() {
+    windowid=$1
+    dir=$2
+
+    if WID=$(xdotool search --class "gnome-terminal" | grep $windowid); then
+        :
+    else
+        echo "Not in a gnome-terminal: aborting." >&2
+        return 1
+    fi
+
+    xdotool key ctrl+shift+t
+    wmctrl -i -a $WID
+    xdotool type "go_to_project -fast \$CURRENT_PROJECT"
+    xdotool key ctrl+j
+    xdotool type "cd $dir"
+    xdotool key ctrl+j
+    xdotool key ctrl+l
+    xdotool key ctrl+j
+}
+
 # Open a new tab in gnome-terminal, for the same project.
 project_tabbed() {
     if [ -z "$CURRENT_PROJECT" ]; then
@@ -312,22 +334,8 @@ project_tabbed() {
         return 1
     fi
 
-
-    class=$(xprop -id $WINDOWID WM_CLASS | awk -F'"' '{print $2}')
-    if WID=$(xdotool search --class "gnome-terminal" | grep $WINDOWID); then
-        :
-    else
-        echo "Not in a gnome-terminal: aborting." >&2
-        return 1
-    fi
-
-    xdotool windowfocus $WID
-    xdotool key ctrl+shift+t
-    wmctrl -i -a $WID
-    xdotool type "go_to_project -fast $CURRENT_PROJECT"
-    xdotool key ctrl+j
-    xdotool type "cd $(pwd)"
-    xdotool key ctrl+j
+    xdotool windowfocus $WID #useless?
+    _project_tabbed $WINDOWID $(pwd)
 }
 
 
