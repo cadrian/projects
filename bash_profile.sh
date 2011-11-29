@@ -304,6 +304,7 @@ complete -F _create_new_project_completion create_new_project np
 _project_tabbed() {
     windowid=$1
     dir=$2
+    prj=$3
 
     if WID=$(xdotool search --class "gnome-terminal" | grep $windowid); then
         :
@@ -314,7 +315,7 @@ _project_tabbed() {
 
     xdotool key ctrl+shift+t
     wmctrl -i -a $WID
-    xdotool type "go_to_project -fast \$CURRENT_PROJECT"
+    xdotool type "go_to_project -fast $prj"
     xdotool key ctrl+j
     xdotool type "cd $dir"
     xdotool key ctrl+j
@@ -335,7 +336,7 @@ project_tabbed() {
     fi
 
     xdotool windowfocus $WID #useless?
-    _project_tabbed $WINDOWID $(pwd)
+    _project_tabbed $WINDOWID $(pwd) "$CURRENT_PROJECT"
 }
 
 
