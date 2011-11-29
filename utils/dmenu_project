@@ -30,5 +30,8 @@ go_to_project $project
 emacs -g 132x50 &
 EOF
 
+    if [ -x $(which gnome-terminal) ]; then
+        exec gnome-terminal --geometry=132x50 --title="Project: $project" --hide-menubar --command="bash --init-file $PROFILE"
+    fi
     exec xterm +bc +cm -cr white -cu -en 'utf-8' -fa Inconsolata -fs 9 -j -ms white -rightbar -rw -s -sb -si -sk -sl 4294967296 -sm -u8 -vb -wc +wf -w 4 -bd '#3f3f3f' -bg '#3f3f3f' -fg ivory -geometry 132x50 -title "Project: $project" -e bash --init-file $PROFILE
 fi
