@@ -100,7 +100,7 @@ export PATH=\$({
     echo \$PROJECT_DEFAULT_PATH
 )
 
-_project_tag_all $PROJECT
+test "\$1" == "-fast" || _project_tag_all $PROJECT
 EOF
 
     chmod +x $PROJECT/go

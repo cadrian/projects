@@ -22,6 +22,13 @@ export PROJECT_DEFAULT_PS1="$PS1"
 # Go to the given project.
 # $1 => project name (defaults to current project, if it exists)
 go_to_project() {
+    if [ x"$1" == x"-fast" ]; then
+        FAST=-fast
+        shift
+    else
+        FAST=""
+    fi
+
     if [ -z "$1" ]; then
         # Find the last saved project
         if [ -h $PROJECT_CURRENT ]; then
@@ -63,7 +70,7 @@ go_to_project() {
     cd $(find $PROJECT/dev -type l -exec readlink {} \;)
 
     export PATH="$PROJECT_DEFAULT_PATH"
-    test -x $PROJECT/go && . $PROJECT/go
+    test -x $PROJECT/go && . $PROJECT/go $FAST
 }
 
 
@@ -317,7 +324,7 @@ project_tabbed() {
     xdotool windowfocus $WID
     xdotool key ctrl+shift+t
     wmctrl -i -a $WID
-    xdotool type "go_to_project $CURRENT_PROJECT"
+    xdotool type "go_to_project -fast $CURRENT_PROJECT"
     xdotool key ctrl+j
     xdotool type "cd $(pwd)"
     xdotool key ctrl+j
