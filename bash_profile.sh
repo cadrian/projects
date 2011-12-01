@@ -341,6 +341,108 @@ project_tabbed() {
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Finders
+
+findpwd() {
+    find "$(pwd)" \( -name CVS -o -name .svn -o -name .git -o -name '@*' -o -name tmp \) -prune -o "$@"
+}
+
+fgrep() {
+    findpwd -type f -exec grep -Hn "$@" {} \;
+}
+
+fpy() {
+    findpwd \( -iname \*.py -o -iname \*.config \) -exec grep -Hn "$@" {} \;
+}
+
+fc() {
+    findpwd -iname \*.[ch] -exec grep -Hn "$@" {} \;
+}
+
+fcpp() {
+    findpwd \( -iname \*.[ch]pp -o -iname \*.[ch] \) -exec grep -Hn "$@" {} \;
+}
+
+fbas() {
+    findpwd \( -iname \*.cls -o -iname \*.bas -o -iname \*.frm \)  -exec grep -Hn "$@" {} \;
+}
+
+fj() {
+    findpwd -iname \*.java -exec grep -Hn "$@" {} \;
+}
+
+fhtml() {
+    findpwd -iname \*.html -exec grep -Hn "$@" {} \;
+}
+
+fe() {
+    findpwd -iname \*.e -exec grep -Hn "$@" {} \;
+}
+
+flog() {
+    findpwd \( -iname \*.log -o -iname \*.dbg -o -iname \*.txt -o -iname \*.[0-9][0-9][0-9] \) -exec grep -Hn "$@" {} \;
+}
+
+fconf() {
+    findpwd \( -iname \*.conf -o -iname \*.ini -o -iname \*make\* \) -exec grep -Hn "$@" {} \;
+}
+
+# Global finders
+
+gf() {
+    (cd $(readlink -f $PROJECTS_DIR/$CURRENT_PROJECT/dev); "$@")
+
+    dep_dir=$PROJECTS_DIR/$CURRENT_PROJECT/dep
+    if [ -d $dep_dir ]; then
+        for dep_link in $(echo $dep_dir/*); do
+            dep=$(readlink -f $dep_link)
+            (cd $dep; "$@")
+        done
+    fi
+}
+
+gfgrep() {
+    gf fgrep "$@"
+}
+
+gfpy() {
+    gf fpy "$@"
+}
+
+gfc() {
+    gf fc "$@"
+}
+
+gfcpp() {
+    gf fcpp "$@"
+}
+
+gfbas() {
+    gf fbas "$@"
+}
+
+gfj() {
+    gf fj "$@"
+}
+
+gfhtml() {
+    gf fhtml "$@"
+}
+
+gfe() {
+    gf fe "$@"
+}
+
+gflog() {
+    gf flog "$@"
+}
+
+gfconf() {
+    gf fconf "$@"
+}
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Useful functions
 
 fc() {
