@@ -9,7 +9,7 @@ var_of() {
 child_of() {
     pid=$1
     type=$2
-    ps -eo "%P:%p:%c" | grep -E "^$pid:[0-9]+:$type\$" | awk -F: '{print $2}'
+    ps -eo "%P:%p:%c" | grep -E "^ *$pid: *[0-9]+:$type\$" | awk -F: '{print $2}'
 }
 
 pack=${PROJECT_PACK:-$(dirname $(dirname $(readlink -f $0)))}
