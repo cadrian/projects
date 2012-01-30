@@ -34,6 +34,6 @@ for CHILD_PID in $(child_of $PID bash); do
             dir="$prjdir/$dirtail"
         fi
         dir=$(echo "$dir" | sed "s!$HOME!~!g")
-        _project_tabbed $WID "$dir" "$prj"
+        _project_tabbed $WID "$dir" "$prj" && exit
     fi
 done

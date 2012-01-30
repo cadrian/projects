@@ -315,12 +315,16 @@ _project_tabbed() {
 
     xdotool key ctrl+shift+t
     wmctrl -i -a $WID
-    xdotool type "go_to_project -fast $prj"
-    xdotool key ctrl+j
-    xdotool type "cd $dir"
-    xdotool key ctrl+j
-    xdotool key ctrl+l
-    xdotool key ctrl+j
+    sleep 1
+    xdotool type --clearmodifiers "go_to_project -fast $prj"
+    xdotool key  --clearmodifiers ctrl+j
+    sleep 1
+    xdotool type --clearmodifiers "cd $dir"
+    xdotool key  --clearmodifiers ctrl+j
+    sleep 1
+    xdotool key  --clearmodifiers ctrl+shift+g
+    xdotool key  --clearmodifiers ctrl+l
+    xdotool key  --clearmodifiers ctrl+j
 }
 
 # Open a new tab in gnome-terminal, for the same project.
