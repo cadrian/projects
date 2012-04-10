@@ -64,7 +64,7 @@ make_tags() {
 export PROJECT=\${PROJECT:-$PROJECT}
 export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
 export PROJECT_DEVDIR=\$(readlink \$PROJECT/dev)
-etags \$@ -f \$TAGS --language-force=Eiffel --extra=+f --fields=+ailmnSz \$(find \$PROJECT_DEVDIR -name \\*.e) 2>/dev/null|| echo "Brand new project: no file tagged."
+etags \$@ -f \$TAGS --language-force=Eiffel --extra=+f --fields=+ailmnSz \$(find \$PROJECT_DEVDIR -name test -prune -o -name \\*.e -print) 2>/dev/null|| echo "Brand new project: no file tagged."
 
 if [ -d \$PROJECT/dep ]; then
     for dep in \$(echo \$PROJECT/dep/*); do
@@ -82,7 +82,7 @@ EOF
 export PROJECT=\${PROJECT:-$PROJECT}
 export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
 export PROJECT_DEVDIR=\$(readlink \$PROJECT/dev)
-find \$PROJECT_DEVDIR -name \\*.e 2>/dev/null
+find \$PROJECT_DEVDIR -name test -prune -o -name \\*.e -print 2>/dev/null
 
 if [ -d \$PROJECT/dep ]; then
     for dep in \$(echo \$PROJECT/dep/*); do
