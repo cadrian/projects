@@ -27,6 +27,7 @@ fi
 . \$PROJECT_PACK/bash_profile.sh
 
 go_to_project $project
+
 emacs -g 132x50 &
 EOF
 

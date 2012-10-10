@@ -8,8 +8,14 @@ PROJECT_DEVDIR=$2
 
 
 make_emacs() {
+    EMACS=$(which emacs-snapshot || which emacs)
+    test -e $PROJECT/bin/emacs && rm $PROJECT/bin/emacs
+    ln -s $EMACS $PROJECT/bin/emacs
+
     cat > $PROJECT/project.el <<EOF
 (setq load-path (cons "$PROJECT_PACK/site-lisp" (cons "$PROJECT_PACK/site-lisp/mk-project" load-path)))
+(setq load-path (cons "~/.emacs.d/site-lisp/python-mode/"  load-path))
+(setenv "PYMACS_PYTHON" "python2.6")
 
 (require 'mk-project)
 (global-set-key (kbd "C-c p c") 'project-compile)
@@ -36,6 +42,25 @@ make_emacs() {
         (compile-cmd      nil)
         (startup-hook     $PROJECT_NAME-project-startup)
         (shutdown-hook    nil)))
+
+(setq ropemacs-enable-shortcuts nil)
+(setq ropemacs-local-prefix "C-c C-p")
+
+(require 'python-mode)
+(autoload 'pymacs-apply "pymacs")
+(autoload 'pymacs-call "pymacs")
+(autoload 'pymacs-eval "pymacs" nil t)
+(autoload 'pymacs-exec "pymacs" nil t)
+(autoload 'pymacs-load "pymacs" nil t)
+
+;(pymacs-load "ropemacs" "rope-")
+;(setq ropemacs-enable-autoimport t)
+
+(setq whitespace-line-column 140)
+
+(defun at-save ()
+  (goto-char (point-max))
+  (insert "\n\n"))
 
 (defun $PROJECT_NAME-project-startup ()
   nil)

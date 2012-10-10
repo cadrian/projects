@@ -8,6 +8,10 @@ PROJECT_DEVDIR=$2
 
 
 make_emacs() {
+    EMACS=$(which emacs-snapshot || which emacs)
+    test -e $PROJECT/bin/emacs && rm $PROJECT/bin/emacs
+    ln -s $EMACS $PROJECT/bin/emacs
+
     cat > $PROJECT/project.el <<EOF
 (setq load-path (cons "$PROJECT_PACK/site-lisp" (cons "$PROJECT_PACK/site-lisp/mk-project" load-path)))
 

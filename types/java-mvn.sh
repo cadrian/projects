@@ -8,6 +8,10 @@ PROJECT_DEVDIR=$2
 
 
 make_emacs() {
+    EMACS=$(which emacs-snapshot || which emacs)
+    test -e $PROJECT/bin/emacs && rm $PROJECT/bin/emacs
+    ln -s $EMACS $PROJECT/bin/emacs
+
     MALABAR=$HOME/.emacs.d/malabar-1.4.0
     PMD=$HOME/.emacs.d/pmd-4.2.5
     JAVA=$(which java)

@@ -347,9 +347,9 @@ findpwd() {
     find "$(pwd)" \( -name CVS -o -name .svn -o -name .git -o -name '@*' -o -name tmp \) -prune -o "$@"
 }
 
-fgrep() {
-    findpwd -type f -exec grep -Hn "$@" {} \;
-}
+#fgrep() {
+#    findpwd -type f -exec grep -Hn "$@" {} \;
+#}
 
 fpy() {
     findpwd \( -iname \*.py -o -iname \*.config \) -exec grep -Hn "$@" {} \;
