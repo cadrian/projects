@@ -17,6 +17,8 @@ make_emacs() {
 (setq load-path (cons "~/.emacs.d/site-lisp/python-mode/"  load-path))
 (setenv "PYMACS_PYTHON" "python2.6")
 
+(add-to-list 'auto-mode-alist '("\\\\.pycfg\\\\'" . python-mode))
+
 (require 'mk-project)
 (global-set-key (kbd "C-c p c") 'project-compile)
 (global-set-key (kbd "C-c p l") 'project-load)
