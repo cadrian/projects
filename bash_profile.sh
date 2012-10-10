@@ -166,6 +166,8 @@ update_project() {
         PROJECT_DEVDIR=$(readlink $PROJECT/dev)
     fi
 
+    rm -f $PROJECT/.dmenu_profile
+
     $PROJECT_FACTORY $CURRENT_PROJECT $PROJECT_DEVDIR
 }
 
