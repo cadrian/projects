@@ -60,10 +60,6 @@ make_emacs() {
 
 (setq whitespace-line-column 140)
 
-(defun at-save ()
-  (goto-char (point-max))
-  (insert "\n\n"))
-
 (defun $PROJECT_NAME-project-startup ()
   nil)
 
