@@ -17,6 +17,7 @@ if project=$(dmenu -b -i -p 'Project:' -fn fixed -nb '#3f3f3f' -nf ivory -sb '#2
     PROFILE=$PROJECTS_DIR/$project/.dmenu_profile
     test -e $PROFILE || cat > $PROFILE <<EOF
 set -p
+
 export PROJECT_PACK=$pack
 
 if [ -e \$HOME/.bash_profile ]; then
@@ -27,7 +28,8 @@ fi
 . \$PROJECT_PACK/bash_profile.sh
 
 go_to_project $project
-emacs -g 132x50 &
+echo "DISPLAY=$DISPLAY emacs -g 132x50" | at now 2>/dev/null
+
 EOF
 
     if [ -x $(which gnome-terminal) ]; then
