@@ -10,7 +10,7 @@ PROJECT_DEVDIR=$2
 make_emacs() {
     EMACS=$(which emacs-snapshot || which emacs)
     test -e $PROJECT/bin/emacs && rm $PROJECT/bin/emacs
-    ln -s $EMACS $PROJECT/bin/emacs
+    ln -sf $EMACS $PROJECT/bin/emacs
 
     MALABAR=$HOME/.emacs.d/malabar-1.4.0
     PMD=$HOME/.emacs.d/pmd-4.2.5
@@ -114,7 +114,7 @@ make_tags() {
 export PROJECT=\${PROJECT:-$PROJECT}
 export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
 export PROJECT_DEVDIR=\$(readlink \$PROJECT/dev)
-etags \$@ -f \$TAGS --language-force=Java --Java-kinds=-f \$(find \$PROJECT_DEVDIR -name .svn -prune -o -name CVS -prune -o -name \\*.java -print)
+etags \$@ -f \$TAGS --language-force=Java --Java-kinds=-f \$(find \$PROJECT_DEVDIR -name .svn -prune -o -name CVS -prune -o -name tmp -prune -o -name \\*.java -print)
 
 if [ -d \$PROJECT/dep ]; then
     for dep in \$(echo \$PROJECT/dep/*); do
@@ -132,7 +132,7 @@ EOF
 export PROJECT=\${PROJECT:-$PROJECT}
 export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
 export PROJECT_DEVDIR=\$(readlink \$PROJECT/dev)
-find \$PROJECT_DEVDIR -name .svn -prune -o -name CVS -prune -o -name \\*.java -print 2>/dev/null
+find \$PROJECT_DEVDIR -name .svn -prune -o -name CVS -prune -o -name tmp -prune -o -name \\*.java -print 2>/dev/null
 
 if [ -d \$PROJECT/dep ]; then
     for dep in \$(echo \$PROJECT/dep/*); do
@@ -154,8 +154,8 @@ make_go() {
 
 export PATH=\$({
         echo $PROJECT/bin
-        find -L $PROJECT/dev/ -type d -name bin | sort
-        test -d $PROJECT/dep && find -L $PROJECT/dep -type d -name bin | sort
+        find -L $PROJECT/dev/ -name tmp -prune -o -type d -name bin -print | sort
+        test -d $PROJECT/dep && find -L $PROJECT/dep -name tmp -prune -o -type d -name bin -print | sort
     } | awk '{printf("%s:", \$0)}'
     echo \$PROJECT_DEFAULT_PATH
 )

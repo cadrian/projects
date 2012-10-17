@@ -10,7 +10,7 @@ PROJECT_DEVDIR=$2
 make_emacs() {
     EMACS=$(which emacs-snapshot || which emacs)
     test -e $PROJECT/bin/emacs && rm $PROJECT/bin/emacs
-    ln -s $EMACS $PROJECT/bin/emacs
+    ln -sf $EMACS $PROJECT/bin/emacs
 
     cat > $PROJECT/project.el <<EOF
 (setq load-path (cons "$PROJECT_PACK/site-lisp" (cons "$PROJECT_PACK/site-lisp/mk-project" load-path)))
@@ -58,7 +58,7 @@ make_tags() {
 export PROJECT=\${PROJECT:-$PROJECT}
 export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
 export PROJECT_DEVDIR=\$(readlink \$PROJECT/dev)
-etags \$@ -f \$TAGS --language-force=Tex --extra=+f --fields=+ailmnSz \$(find \$PROJECT_DEVDIR -name \\*.tex) 2>/dev/null|| echo "Brand new project: no file tagged."
+etags \$@ -f \$TAGS --language-force=Tex --extra=+f --fields=+ailmnSz \$(find \$PROJECT_DEVDIR -name tmp -prune -o -name \\*.tex -print) 2>/dev/null|| echo "Brand new project: no file tagged."
 
 if [ -d \$PROJECT/dep ]; then
     for dep in \$(echo \$PROJECT/dep/*); do
@@ -76,7 +76,7 @@ EOF
 export PROJECT=\${PROJECT:-$PROJECT}
 export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
 export PROJECT_DEVDIR=\$(readlink \$PROJECT/dev)
-find \$PROJECT_DEVDIR -name \\*.ly 2>/dev/null
+find \$PROJECT_DEVDIR -name tmp -prune -o -name \\*.ly -print 2>/dev/null
 
 if [ -d \$PROJECT/dep ]; then
     for dep in \$(echo \$PROJECT/dep/*); do
@@ -98,8 +98,8 @@ make_go() {
 
 export PATH=\$({
         echo $PROJECT/bin
-        find -L $PROJECT/dev -type d -name bin | sort
-        test -d $PROJECT/dep && find -L $PROJECT/dep -type d -name bin | sort
+        find -L $PROJECT/dev -name tmp -prune -o -type d -name bin -print | sort
+        test -d $PROJECT/dep && find -L $PROJECT/dep -name tmp -prune -o -type d -name bin -print | sort
     } | awk '{printf("%s:", \$0)}'
     echo \$PROJECT_DEFAULT_PATH
 )
