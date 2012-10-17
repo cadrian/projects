@@ -234,7 +234,7 @@ as number of `eif-indent-increments'."
   :type 'integer
   :group 'eiffel-indent)
 
-(defcustom eif-extra-then-indent 1
+(defcustom eif-extra-then-indent 0
   "*Number of spaces to add to `eif-then-indent'.
 This results in the actual indentation of a `then' appearing on a line
 by itself.  Can be negative."
@@ -638,11 +638,20 @@ See `eif-preprocessor-keywords'.")
   "Eiffel keywords representing major variables.")
 
 (defconst eif-standard-class-keywords
-  (concat "ANY\\|BIT_STRING\\|BOOLEAN\\|CHARACTER\\|DOUBLE\\|FIXED_STRING\\|"
-	  "INTEGER\\(_[0-9]+\\)?\\|NATURAL\\(_[0-9]+\\)?\\|POINTER\\|REAL\\(_[0-9]+\\|_EXTENDED\\)?\\|STRING\\|"
-	  "EXCEPTIONS\\|FUNCTION\\|PROCEDURE\\|PREDICATE\\|ROUTINE\\|REFERENCE\\|"
-	  "WEAK_REFERENCE\\|TUPLE\\|INTERNALS\\|MEMORY")
-  "Eiffel keywords representing kernel classes.")
+;  (concat "ANY\\|BIT_STRING\\|BOOLEAN\\|CHARACTER\\|DOUBLE\\|FIXED_STRING\\|"
+;	  "INTEGER\\(_[0-9]+\\)?\\|NATURAL\\(_[0-9]+\\)?\\|POINTER\\|REAL\\(_[0-9]+\\|_EXTENDED\\)?\\|STRING\\|"
+;	  "EXCEPTIONS\\|FUNCTION\\|PROCEDURE\\|PREDICATE\\|ROUTINE\\|REFERENCE\\|"
+;	  "WEAK_REFERENCE\\|TUPLE\\|INTERNALS\\|MEMORY")
+    "[A-Z][A-Z0-9_]*[A-Z0-9]"
+  "Eiffel keywords representing classes.")
+
+(defconst eif-generic-class-keywords
+;  (concat "ANY\\|BIT_STRING\\|BOOLEAN\\|CHARACTER\\|DOUBLE\\|FIXED_STRING\\|"
+;	  "INTEGER\\(_[0-9]+\\)?\\|NATURAL\\(_[0-9]+\\)?\\|POINTER\\|REAL\\(_[0-9]+\\|_EXTENDED\\)?\\|STRING\\|"
+;	  "EXCEPTIONS\\|FUNCTION\\|PROCEDURE\\|PREDICATE\\|ROUTINE\\|REFERENCE\\|"
+;	  "WEAK_REFERENCE\\|TUPLE\\|INTERNALS\\|MEMORY")
+    "[A-Z][A-Z0-9_]*_"
+  "Eiffel keywords representing generic class names.")
 
 (defconst eif-all-keywords
   (concat eif-indentation-keywords    "\\|"
@@ -675,7 +684,7 @@ Does not include `is'.  See `eif-all-keywords'.")
 ;; eif-{beginning,end}-of-feature.
 
 (defconst eif-routine-begin-regexp
-  "\\([a-z_][a-zA-Z_0-9]*\\)\\s-*\\(([^)]*)\\)?\\s-*\\(:\\s-*[A-Z][A-Za-z0-9_]*\\)?\\s-*\\<is\\>\\s-*\\(--.*\\)?$"
+  "\\([a-z_][a-zA-Z_0-9]*\\)\\s-*\\(([^)]*)\\)?\\s-*\\(:\\s-*[A-Z][A-Za-z0-9_]*\\(\\s-*\\[[^\\]]*\\]\\)?\\)?\\s-*\\<is\\>\\s-*\\(--.*\\)?$"
   "Regexp matching the beginning of an Eiffel routine declaration.")
 
 (defconst eif-attribute-regexp
@@ -727,12 +736,12 @@ This will also match local variable and parameter declarations.")
    eiffel-font-lock-keywords-1
    `(;; Assertions.
      ;; FIXME: Cyril thinks these should just be part of the keywords below.
-     (,(eif-anchor "check\\|ensure then\\|ensure\\|invariant\\|require else\\|require\\|variant") 2 font-lock-reference-face nil)
+     (,(eif-anchor "check\\|ensure then\\|ensure\\|invariant\\|require else\\|require\\|variant") 2 font-lock-pseudo-keyword-face nil)
 
      ;; Preprocessor keywords.  Note that, by luck more than planning,
      ;; these aren't font-locked when they're not indented, since the
      ;; '#' isn't a word boundary (which is added by eif-anchor).
-     (,(eif-post-anchor eif-preprocessor-keywords) 2 font-lock-builtin-face nil)
+     (,(eif-post-anchor eif-preprocessor-keywords) 2 font-lock-preprocessor-face nil)
 
      ;; Keywords.  The first few can appear in conjunction with other
      ;; keywords, and the anchored regexp doesn't cater for overlaps,
@@ -746,7 +755,8 @@ This will also match local variable and parameter declarations.")
      ("`[^`'\n]*'" 0 font-lock-string-face t)
 
      ;; Classes.
-     (,(eif-anchor eif-standard-class-keywords) 2 font-lock-type-face)))
+     (,(eif-anchor eif-standard-class-keywords) 2 font-lock-type-face nil)
+     (,(eif-anchor eif-generic-class-keywords)  2 font-lock-preprocessor-face nil)))
    "Regular expressions to use with font-lock mode and level 2 fontification.")
 
 (defconst eiffel-font-lock-keywords-3
@@ -770,7 +780,7 @@ This will also match local variable and parameter declarations.")
   (append
    eiffel-font-lock-keywords-3
    `((,(eif-anchor eif-smarteiffel-guru-keywords) 2 font-lock-warning-face)
-     (,(eif-anchor eif-major-variable-keywords) 2 font-lock-constant-face))))
+     (,(eif-anchor eif-major-variable-keywords) 2 font-lock-builtin-face))))
 
 (defvar eiffel-font-lock-keywords eiffel-font-lock-keywords-1
   "Default expressions to highlight in Eiffel mode.

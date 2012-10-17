@@ -105,7 +105,7 @@ export PATH=\$({
 test "\$1" == "-fast" || _project_tag_all $PROJECT
 EOF
 
-    chmox +x $PROJECT/go
+    chmod +x $PROJECT/go
 }
 
 
