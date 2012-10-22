@@ -9,8 +9,8 @@ PROJECT_DEVDIR=$2
 
 make_emacs() {
     EMACS=$(which emacs-snapshot || which emacs)
-    test -e $PROJECT/bin/emacs && rm $PROJECT/bin/emacs
-    ln -sf $EMACS $PROJECT/bin/emacs
+    test -h $PROJECT/bin/emacs && rm $PROJECT/bin/emacs
+    test -e $PROJECT/bin/emacs || ln -s $EMACS $PROJECT/bin/emacs
 
     MALABAR=$HOME/.emacs.d/malabar-1.4.0
     PMD=$HOME/.emacs.d/pmd-4.2.5
@@ -113,8 +113,12 @@ make_tags() {
 
 export PROJECT=\${PROJECT:-$PROJECT}
 export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
+export LOG=\${LOG:-\$PROJECT/.mk/tag_log}
 export PROJECT_DEVDIR=\$(readlink \$PROJECT/dev)
-etags \$@ -f \$TAGS --language-force=Java --Java-kinds=-f \$(find \$PROJECT_DEVDIR -name .svn -prune -o -name CVS -prune -o -name tmp -prune -o -name \\*.java -print)
+test x\$1 == x-a || rm \$LOG
+touch \$LOG
+echo "\$(date -R) - updating $PROJECT" >>\$LOG
+find \$PROJECT_DEVDIR -name .svn -prune -o -name CVS -prune -o -name tmp -prune -o -name \\*.java -print | etags \$@ -f \$TAGS --language-force=Java --Java-kinds=-f -L- 2>>\$LOG || echo "Brand new project: no file tagged."
 
 if [ -d \$PROJECT/dep ]; then
     for dep in \$(echo \$PROJECT/dep/*); do

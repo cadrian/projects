@@ -9,8 +9,8 @@ PROJECT_DEVDIR=$2
 
 make_emacs() {
     EMACS=$(which emacs-snapshot || which emacs)
-    test -e $PROJECT/bin/emacs && rm $PROJECT/bin/emacs
-    ln -sf $EMACS $PROJECT/bin/emacs
+    test -h $PROJECT/bin/emacs && rm $PROJECT/bin/emacs
+    test -e $PROJECT/bin/emacs || ln -s $EMACS $PROJECT/bin/emacs
 
     cat > $PROJECT/project.el <<EOF
 (setq load-path (cons "$PROJECT_PACK/site-lisp" (cons "$PROJECT_PACK/site-lisp/mk-project" load-path)))
@@ -57,8 +57,12 @@ make_tags() {
 
 export PROJECT=\${PROJECT:-$PROJECT}
 export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
+export LOG=\${LOG:-\$PROJECT/.mk/tag_log}
 export PROJECT_DEVDIR=\$(readlink \$PROJECT/dev)
-etags \$@ -f \$TAGS --language-force=Tex --extra=+f --fields=+ailmnSz \$(find \$PROJECT_DEVDIR -name tmp -prune -o -name \\*.tex -print) 2>/dev/null|| echo "Brand new project: no file tagged."
+test x\$1 == x-a || rm \$LOG
+touch \$LOG
+echo "\$(date -R) - updating $PROJECT" >>\$LOG
+find \$PROJECT_DEVDIR -name tmp -prune -o -name \\*.tex -print | etags \$@ -f \$TAGS --language-force=Tex --extra=+f --fields=+ailmnSz -L- 2>>\$LOG|| echo "Brand new project: no file tagged."
 
 if [ -d \$PROJECT/dep ]; then
     for dep in \$(echo \$PROJECT/dep/*); do
