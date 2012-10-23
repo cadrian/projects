@@ -19,6 +19,7 @@ make_emacs() {
 
 (add-to-list 'auto-mode-alist '("\\\\.pycfg\\\\'" . python-mode))
 
+
 (require 'mk-project)
 (global-set-key (kbd "C-c p c") 'project-compile)
 (global-set-key (kbd "C-c p l") 'project-load)
@@ -33,10 +34,27 @@ make_emacs() {
 (global-set-key (kbd "C-c p d") 'project-dired)
 (global-set-key (kbd "C-c p t") 'project-tags)
 
+(defun my-python-filename-to-clipboard ()
+  (interactive)
+  (let ((text buffer-file-name))
+    (deactivate-mark)
+    (x-set-selection 'PRIMARY text)
+    (message "%s" text)))
+
+(defun my-python-def-to-clipboard ()
+  (interactive)
+  (let ((text (python-beginning-of-defun)))
+    (deactivate-mark)
+    (x-set-selection 'PRIMARY text)
+    (message "%s" text)))
+
+(global-set-key (kbd "C-c p C-f") 'my-python-filename-to-clipboard)
+(global-set-key (kbd "C-c p C-d") 'my-python-def-to-clipboard)
+
 (project-def "$PROJECT_NAME-project"
       '((basedir          "$PROJECT_DEVDIR")
-        (src-patterns     ("*.e"))
-        (ignore-patterns  ("*.o"))
+        (src-patterns     ("*.py" "*.pycfg"))
+        (ignore-patterns  ("*.pyc"))
         (tags-file        "$PROJECT/.mk/TAGS")
         (file-list-cache  "$PROJECT/.mk/files")
         (open-files-cache "$PROJECT/.mk/open-files")
