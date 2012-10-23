@@ -8,16 +8,8 @@ PROJECT_DEVDIR=$2
 
 
 make_emacs() {
-    EMACS=$(which emacs-snapshot || which emacs)
-    test -h $PROJECT/bin/emacs && rm $PROJECT/bin/emacs
-    test -e $PROJECT/bin/emacs || ln -s $EMACS $PROJECT/bin/emacs
-
     cat > $PROJECT/project.el <<EOF
 (setq load-path (cons "$PROJECT_PACK/site-lisp" (cons "$PROJECT_PACK/site-lisp/mk-project" load-path)))
-
-(add-to-list 'auto-mode-alist '("\\\\.e\\\\'" . eiffel-mode))
-(add-to-list 'auto-mode-alist '("\\\\.se\\\\'" . eiffel-mode))
-(autoload 'eiffel-mode "eiffel" "Major mode for Eiffel programs" t)
 
 (require 'mk-project)
 (global-set-key (kbd "C-c p c") 'project-compile)
@@ -41,18 +33,12 @@ make_emacs() {
         (file-list-cache  "$PROJECT/.mk/files")
         (open-files-cache "$PROJECT/.mk/open-files")
         (vcs              git)
-        (compile-cmd      "se compile")
+        (compile-cmd      nil)
         (startup-hook     $PROJECT_NAME-project-startup)
         (shutdown-hook    nil)))
 
 (defun $PROJECT_NAME-project-startup ()
-  t)
-
-(defun tabs-eiffel-mode-hook ()
- (message " Loading tabs-eiffel-mode-hook...")
- (setq eif-set-tab-width-flag nil)
- (setq eif-indent-increment 3))
-(add-hook 'eiffel-mode-hook 'tabs-eiffel-mode-hook)
+  nil)
 
 (set-frame-name "Emacs: $PROJECT_NAME")
 (project-load "$PROJECT_NAME-project")
@@ -67,12 +53,8 @@ make_tags() {
 
 export PROJECT=\${PROJECT:-$PROJECT}
 export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
-export LOG=\${LOG:-\$PROJECT/.mk/tag_log}
 export PROJECT_DEVDIR=\$(readlink \$PROJECT/dev)
-test x\$1 == x-a || rm \$LOG
-touch \$LOG
-echo "\$(date -R) - updating $PROJECT" >>\$LOG
-find \$PROJECT_DEVDIR -name test -prune -o -name tmp -prune -o -name \\*.e -print | etags \$@ -f \$TAGS --language-force=Eiffel --extra=+f --fields=+ailmnSz -L- 2>>\$LOG|| echo "Brand new project: no file tagged."
+etags \$@ -f \$TAGS --language-force=PHP \$(find \$PROJECT_DEVDIR -name \\*.php -o -name \\*.html) 2>/dev/null || echo "Brand new project: no file tagged."
 
 if [ -d \$PROJECT/dep ]; then
     for dep in \$(echo \$PROJECT/dep/*); do
@@ -90,7 +72,7 @@ EOF
 export PROJECT=\${PROJECT:-$PROJECT}
 export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
 export PROJECT_DEVDIR=\$(readlink \$PROJECT/dev)
-find \$PROJECT_DEVDIR -name test -prune -o -name tmp -prune -o -name \\*.e -print 2>/dev/null
+find \$PROJECT_DEVDIR -name \\*.php -o -name \\*.html 2>/dev/null
 
 if [ -d \$PROJECT/dep ]; then
     for dep in \$(echo \$PROJECT/dep/*); do
@@ -112,8 +94,8 @@ make_go() {
 
 export PATH=\$({
         echo $PROJECT/bin
-        find -L $PROJECT/dev/ -name tmp -prune -o -type d -name bin -print | sort
-        test -d $PROJECT/dep && find -L $PROJECT/dep -name tmp -prune -o -type d -name bin -print | sort
+        find -L $PROJECT/dev/ -type d -name bin | sort
+        test -d $PROJECT/dep && find -L $PROJECT/dep -type d -name bin | sort
     } | awk '{printf("%s:", \$0)}'
     echo \$PROJECT_DEFAULT_PATH
 )
