@@ -53,8 +53,12 @@ make_tags() {
 
 export PROJECT=\${PROJECT:-$PROJECT}
 export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
+export LOG=\${LOG:-\$PROJECT/.mk/tag_log}
 export PROJECT_DEVDIR=\$(readlink \$PROJECT/dev)
-etags \$@ -f \$TAGS --language-force=PHP \$(find \$PROJECT_DEVDIR -name \\*.php -o -name \\*.html) 2>/dev/null || echo "Brand new project: no file tagged."
+test x\$1 == x-a || rm \$LOG
+touch \$LOG
+echo "\$(date -R) - updating $PROJECT" >>\$LOG
+find \$PROJECT_DEVDIR -name \\*.php -o -name \\*.html | etags \$@ -f \$TAGS --language-force=PHP -L- 2>\$LOG || echo "Brand new project: no file tagged."
 
 if [ -d \$PROJECT/dep ]; then
     for dep in \$(echo \$PROJECT/dep/*); do
