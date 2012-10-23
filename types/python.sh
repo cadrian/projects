@@ -96,7 +96,7 @@ export PROJECT=\${PROJECT:-$PROJECT}
 export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
 export LOG=\${LOG:-\$PROJECT/.mk/tag_log}
 export PROJECT_DEVDIR=\$(readlink \$PROJECT/dev)
-test x\$1 == x-a || rm \$LOG
+test x\$1 == x-a || rm -f \$LOG
 touch \$LOG
 echo "\$(date -R) - updating $PROJECT" >>\$LOG
 find \$PROJECT_DEVDIR -name tmp -prune -o -name \\*.py -print | etags \$@ -f \$TAGS --language-force=python --python-kinds=cfm -L- 2>>\$LOG || echo "Brand new project: no file tagged."
