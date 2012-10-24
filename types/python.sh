@@ -41,25 +41,31 @@ make_emacs() {
     (x-set-selection 'PRIMARY text)
     (message "%s" text)))
 
-(defun my-python-gather-names ()
-  (if (py-beginning-of-def-or-class)
-      (progn
-        (let ((name (save-excursion
-                      (forward-word)
-                      (forward-whitespace 1)
-                      (word-at-point))))
-          (concat (my-python-gather-names) "." name)))
+(defun my-python-gather-names (indent)
+  (message "my-python-gather-names: indent=%d - current=%d" indent (current-indentation))
+  (if (py-beginning-of-block)
+      (if (>= (current-indentation) indent)
+          (my-python-gather-names indent)
+
+          (let ((name (save-excursion
+                        (forward-word)
+                        (forward-whitespace 1)
+                        (word-at-point))))
+            (message "concat: %s" name)
+            (concat (my-python-gather-names (current-indentation)) "." name)))
     ""))
 
 (defun my-python-def-to-clipboard ()
   (interactive)
   (save-excursion
-    (let ((py-module (py-qualified-module-name buffer-file-name)))
-      (let ((py-names (my-python-gather-names)))
-        (let ((text (concat py-module py-names)))
-          (deactivate-mark)
-          (x-set-selection 'PRIMARY text)
-          (message "%s" text))))))
+    (if (py-beginning-of-block)
+        (let ((py-module (py-qualified-module-name buffer-file-name)))
+          (let ((py-names (my-python-gather-names (+ 1 (current-indentation)))))
+            (let ((text (concat py-module py-names)))
+              (deactivate-mark)
+              (x-set-selection 'PRIMARY text)
+              (message "%s" text))))
+      (message "not found"))))
 
 (global-set-key (kbd "C-c p C-f") 'my-python-filename-to-clipboard)
 (global-set-key (kbd "C-c p C-d") 'my-python-def-to-clipboard)
