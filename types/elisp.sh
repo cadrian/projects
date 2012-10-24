@@ -31,8 +31,8 @@ make_emacs() {
 
 (project-def "$PROJECT_NAME-project"
       '((basedir          "$PROJECT_DEVDIR")
-        (src-patterns     ("*.e"))
-        (ignore-patterns  ("*.o"))
+        (src-patterns     ("*.el"))
+        (ignore-patterns  ("*.elc"))
         (tags-file        "$PROJECT/.mk/TAGS")
         (file-list-cache  "$PROJECT/.mk/files")
         (open-files-cache "$PROJECT/.mk/open-files")
