@@ -14,6 +14,7 @@ make_emacs() {
 
     cat > $PROJECT/project.el <<EOF
 (setq load-path (cons "$PROJECT_PACK/site-lisp" (cons "$PROJECT_PACK/site-lisp/mk-project" load-path)))
+(setq project-basedir "$PROJECT_DEVDIR")
 
 (add-to-list 'auto-mode-alist '("\\\\.e\\\\'" . eiffel-mode))
 (add-to-list 'auto-mode-alist '("\\\\.se\\\\'" . eiffel-mode))

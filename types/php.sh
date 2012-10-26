@@ -10,6 +10,7 @@ PROJECT_DEVDIR=$2
 make_emacs() {
     cat > $PROJECT/project.el <<EOF
 (setq load-path (cons "$PROJECT_PACK/site-lisp" (cons "$PROJECT_PACK/site-lisp/mk-project" load-path)))
+(setq project-basedir "$PROJECT_DEVDIR")
 
 (require 'mk-project)
 (global-set-key (kbd "C-c p c") 'project-compile)

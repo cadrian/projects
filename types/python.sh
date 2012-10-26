@@ -15,6 +15,7 @@ make_emacs() {
     cat > $PROJECT/project.el <<EOF
 (setq load-path (cons "$PROJECT_PACK/site-lisp" (cons "$PROJECT_PACK/site-lisp/mk-project" load-path)))
 (setq load-path (cons "~/.emacs.d/site-lisp/python-mode/"  load-path))
+(setq project-basedir "$PROJECT_DEVDIR")
 (setenv "PYMACS_PYTHON" "python2.6")
 
 (add-to-list 'auto-mode-alist '("\\\\.pycfg\\\\'" . python-mode))
@@ -34,13 +35,6 @@ make_emacs() {
 (global-set-key (kbd "C-c p d") 'project-dired)
 (global-set-key (kbd "C-c p t") 'project-tags)
 
-(defun my-python-filename-to-clipboard ()
-  (interactive)
-  (let ((text buffer-file-name))
-    (deactivate-mark)
-    (x-set-selection 'PRIMARY text)
-    (message "%s" text)))
-
 (defun my-python-gather-names (indent)
   (if (py-beginning-of-def-or-class)
       (if (>= (current-indentation) indent)
@@ -51,25 +45,56 @@ make_emacs() {
                         (forward-word)
                         (forward-whitespace 1)
                         (word-at-point))))
-            (concat (my-python-gather-names (current-indentation)) "." name)))
-    ""))
+            (let ((parent-name (my-python-gather-names (current-indentation))))
+              (if parent-name
+                  (concat parent-name "." name)
+                name))))
+    nil))
 
-(defun my-python-def-to-clipboard ()
-  (interactive)
+(defun my-python-def ()
   (save-excursion
     (if (py-beginning-of-def-or-class)
         (progn
           (forward-word)
           (let ((py-module (py-qualified-module-name buffer-file-name)))
-            (let ((py-names (my-python-gather-names (+ py-indent-offset (current-indentation)))))
-              (let ((text (concat py-module py-names)))
-                (deactivate-mark)
-                (x-set-selection 'PRIMARY text)
-                (message "%s" text)))))
+            (let ((py-names (my-python-gather-names (1+ (current-indentation)))))
+              (concat py-module "." py-names)))))))
+
+(defun my-python-unittest-def ()
+  (save-excursion
+    (if (py-beginning-of-def-or-class)
+        (progn
+          (forward-word)
+            (let ((py-names (my-python-gather-names (1+ (current-indentation)))))
+              (concat buffer-file-name " " py-names))))))
+
+(defun my-copy-to-clipboard (text)
+  (interactive)
+    (deactivate-mark)
+    (x-set-selection 'PRIMARY text)
+    (message "%s" text))
+
+(defun my-python-filename-to-clipboard ()
+  (interactive)
+  (my-copy-to-clipboard buffer-file-name))
+
+(defun my-python-def-to-clipboard ()
+  (interactive)
+  (let ((text (my-python-def)))
+    (if text
+        (my-copy-to-clipboard text)
       (message "no def or class found"))))
 
-(global-set-key (kbd "C-c p C-f") 'my-python-filename-to-clipboard)
-(global-set-key (kbd "C-c p C-d") 'my-python-def-to-clipboard)
+(defun my-python-unittest-def-to-clipboard ()
+  (interactive)
+  (let ((text (my-python-unittest-def)))
+    (if text
+        (my-copy-to-clipboard text)
+      (message "no def or class found"))))
+
+(global-set-key (kbd "C-c p y f") 'my-python-filename-to-clipboard)
+(global-set-key (kbd "C-c p y x") 'my-python-def-to-clipboard)
+(global-set-key (kbd "C-c p y d") 'my-python-unittest-def-to-clipboard)
 
 (project-def "$PROJECT_NAME-project"
       '((basedir          "$PROJECT_DEVDIR")

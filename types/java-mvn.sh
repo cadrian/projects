@@ -20,6 +20,7 @@ make_emacs() {
 (add-to-list 'load-path "$PROJECT_PACK/site-lisp")
 (add-to-list 'load-path "$PROJECT_PACK/site-lisp/mk-project")
 (add-to-list 'load-path "$MALABAR/lisp")
+(setq project-basedir "$PROJECT_DEVDIR")
 
 (require 'pmd)
 (setq pmd-java-home "$JAVA")
