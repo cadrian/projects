@@ -33,12 +33,12 @@ make_emacs() {
 (project-def "$PROJECT_NAME-project"
       '((basedir          "$PROJECT_DEVDIR")
         (src-patterns     ("*.go"))
-        (ignore-patterns  ("*.o"))
+        (ignore-patterns  ("*.[568oa]"))
         (tags-file        "$PROJECT/.mk/TAGS")
         (file-list-cache  "$PROJECT/.mk/files")
         (open-files-cache "$PROJECT/.mk/open-files")
         (vcs              git)
-        (compile-cmd      "go")
+        (compile-cmd      "go build")
         (startup-hook     $PROJECT_NAME-project-startup)
         (shutdown-hook    nil)))
 
