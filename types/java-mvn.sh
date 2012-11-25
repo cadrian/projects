@@ -11,6 +11,7 @@ make_emacs() {
     EMACS=$(which emacs-snapshot || which emacs)
     test -h $PROJECT/bin/emacs && rm $PROJECT/bin/emacs
     test -e $PROJECT/bin/emacs || ln -s $EMACS $PROJECT/bin/emacs
+    test -e $PROJECT/bin/etags || ln -s /usr/bin/ctags-exuberant $PROJECT/bin/etags
 
     MALABAR=$HOME/.emacs.d/malabar-1.4.0
     PMD=$HOME/.emacs.d/pmd-4.2.5
