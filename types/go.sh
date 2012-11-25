@@ -109,6 +109,8 @@ export PATH=\$({
     echo \$PROJECT_DEFAULT_PATH
 )
 
+export GOPATH=\$(readlink -f \$PROJECT/dev/)
+
 test "\$1" == "-fast" || _project_tag_all $PROJECT
 EOF
 
