@@ -14,7 +14,7 @@ CACHE=${XDG_CACHE_HOME:-"$HOME/.cache"}/zenity_project
     fi
 )
 
-if project=$(zenity --list --title "Open a project" --column "Project" < "$CACHE"); then
+if project=$(yad --width 300 --height 400 --list --title "Open a project" --column "Project" --no-headers --separator="" < "$CACHE"); then
     if [ x"$project" != x ]; then
         PROFILE=$PROJECTS_DIR/$project/.zenity_profile
         test -e $PROFILE || cat > $PROFILE <<EOF
