@@ -21,7 +21,6 @@ make_emacs() {
 
 (add-to-list 'auto-mode-alist '("\\\\.pycfg\\\\'" . python-mode))
 
-
 (require 'mk-project)
 (global-set-key (kbd "C-c p c") 'project-compile)
 (global-set-key (kbd "C-c p l") 'project-load)
@@ -119,13 +118,25 @@ make_emacs() {
 (autoload 'pymacs-exec "pymacs" nil t)
 (autoload 'pymacs-load "pymacs" nil t)
 
-;(pymacs-load "ropemacs" "rope-")
-;(setq ropemacs-enable-autoimport t)
-
 (setq whitespace-line-column 140)
 
 (defun $PROJECT_NAME-project-startup ()
   nil)
+
+(require 'flymake)
+
+;(load-library "flymake-cursor")
+(defun $PROJECT_NAME-flymake-pycodecheck-init ()
+  (let* ((temp-file (flymake-init-create-temp-buffer-copy
+                     'flymake-create-temp-inplace))
+         (local-file (file-relative-name
+                      temp-file
+                      (file-name-directory buffer-file-name))))
+    (list "$PROJECT_PACK/types/rc/pylint_etc_wrapper.py" (list local-file))))
+(add-to-list 'flymake-allowed-file-name-masks
+             '("\\\\.py\\\\'" $PROJECT_NAME-flymake-pycodecheck-init))
+
+(add-hook 'find-file-hook 'flymake-find-file-hook)
 
 (set-frame-name "Emacs: $PROJECT_NAME")
 (project-load "$PROJECT_NAME-project")
