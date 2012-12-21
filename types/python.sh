@@ -92,6 +92,7 @@ make_emacs() {
   (interactive)
     (deactivate-mark)
     (x-set-selection 'PRIMARY text)
+    (x-set-selection 'CLIPBOARD text)
     (message "%s" text))
 
 (defun my-python-filename-to-clipboard ()
