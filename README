@@ -1,5 +1,11 @@
 A collection of tools for multiple projects management.
 
-Needs: at least bash, emacs
+Needs:
+   at least bash, emacs
 
-Supported project types: C, python, java, eiffel, go, and more.
+Supported project types:
+   C, python, java, eiffel, go, and more.
+
+License:
+   2-clause BSD where applicable (http://opensource.org/licenses/BSD-2-Clause)
+   Imported files from other people keep their original license.
