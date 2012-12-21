@@ -8,6 +8,8 @@ PROJECT_DEVDIR=$2
 
 
 make_emacs() {
+    go build -o $PROJECT/bin/golang_flymake $PROJECT_PACK/types/rc/golang_flymake.go
+
     EMACS=$(which emacs-snapshot || which emacs)
     test -h $PROJECT/bin/emacs && rm $PROJECT/bin/emacs
     test -e $PROJECT/bin/emacs || ln -s $EMACS $PROJECT/bin/emacs
@@ -45,6 +47,20 @@ make_emacs() {
 
 (defun $PROJECT_NAME-project-startup ()
   t)
+
+(require 'flymake)
+
+(defun $PROJECT_NAME-flymake-go-init ()
+  (let* ((temp-file (flymake-init-create-temp-buffer-copy
+                     'flymake-create-temp-inplace))
+         (local-file (file-relative-name
+                      temp-file
+                      (file-name-directory buffer-file-name))))
+    (list "$PROJECT/bin/golang_flymake" (list temp-file))))
+
+(push '(".+\\\\.go$" $PROJECT_NAME-flymake-go-init) flymake-allowed-file-name-masks)
+
+(add-hook 'go-mode-hook 'flymake-mode)
 
 (set-frame-name "Emacs: $PROJECT_NAME")
 (project-load "$PROJECT_NAME-project")
