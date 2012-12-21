@@ -1,0 +1,5 @@
+A collection of tools for multiple projects management.
+
+Needs: at least bash, emacs
+
+Supported project types: C, python, java, eiffel, go, and more.
