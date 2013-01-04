@@ -30,8 +30,8 @@ PROJECT_DEVDIR=$2
 make_emacs() {
     go build -o $PROJECT/bin/golang_flymake $PROJECT_PACK/types/rc/golang_flymake.go
 
-    EMACS=$(which emacs-snapshot || which emacs)
     test -h $PROJECT/bin/emacs && rm $PROJECT/bin/emacs
+    EMACS=$(which emacs-snapshot || which emacs)
     test -e $PROJECT/bin/emacs || ln -s $EMACS $PROJECT/bin/emacs
     test -e $PROJECT/bin/etags || ln -s /usr/bin/ctags-exuberant $PROJECT/bin/etags
 
@@ -86,6 +86,73 @@ make_emacs() {
 (project-load "$PROJECT_NAME-project")
 (project-dired)
 EOF
+
+    cat > $PROJECT/bin/gobuild.sh <<EOF
+#!/bin/sh
+export GOPATH="$PROJECT_DEVDIR"
+
+if [ x\$1 = x-v ]; then
+    verbose=true
+    shift
+else
+    verbose=false
+fi
+
+if [ x\$1 = x ]; then
+    echo "Usage: \$0 [-v] <go file>" >&2
+    exit 1
+fi
+
+emacsfile="\$1"
+gofile=\$(basename \$emacsfile)
+gosrc=\$(dirname \$emacsfile)
+gopkg=\${gosrc#\$GOPATH/src/}
+
+export TMPDIR=\${TMPDIR:-/tmp}/gobuild-\$USER/\$gopkg
+
+mkdir -p \$(dirname \$TMPDIR)
+lockfile-create --use-pid \$TMPDIR
+unlock() {
+    lockfile-remove \$TMPDIR
+}
+trap unlock EXIT QUIT TERM INT
+
+if \$verbose; then
+    export LOG=\$TMPDIR.log
+    echo "log to \$LOG"
+    shift
+fi
+
+rm -rf \$TMPDIR
+mkdir -p \$TMPDIR
+
+cp -lf \$gosrc/*.go \$TMPDIR
+rm -f \$TMPDIR/*_flymake.go
+if [ \${gofile%_flymake.go} = \$gofile ]; then
+    actualfile=\$TMPDIR/\$gofile
+else
+    actualfile=\$TMPDIR/\${gofile%_flymake.go}.go
+fi
+cp -lf \$emacsfile \$actualfile
+
+if \$verbose; then
+    {
+        echo file: \$gofile
+        echo pkg:  \$gopkg
+        echo src:  \$gosrc
+        ls \$gosrc
+        echo
+        echo \$TMPDIR
+        ls \$TMPDIR
+        echo
+    } > \$LOG
+
+    go build -race \$TMPDIR/*.go 2>&1 | tee -a \$LOG
+else
+    go build -race \$TMPDIR/*.go 2>&1
+fi | grep -E "^\$actualfile:" | sed "s&^\$actualfile&\$emacsfile&"
+EOF
+    chmod +x $PROJECT/bin/gobuild.sh
 }
 
 
@@ -146,7 +213,7 @@ export PATH=\$({
     echo \$PROJECT_DEFAULT_PATH
 )
 
-export GOPATH=\$(readlink -f \$PROJECT/dev/)
+export GOPATH="$PROJECT_DEVDIR"
 
 test "\$1" == "-fast" || _project_tag_all $PROJECT
 EOF
