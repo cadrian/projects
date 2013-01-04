@@ -28,8 +28,8 @@ PROJECT_DEVDIR=$2
 
 
 make_emacs() {
-    EMACS=$(which emacs-snapshot || which emacs)
     test -h $PROJECT/bin/emacs && rm $PROJECT/bin/emacs
+    EMACS=$(which emacs-snapshot || which emacs)
     test -e $PROJECT/bin/emacs || ln -s $EMACS $PROJECT/bin/emacs
     test -e $PROJECT/bin/etags || ln -s /usr/bin/ctags-exuberant $PROJECT/bin/etags
 

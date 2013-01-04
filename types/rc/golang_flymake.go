@@ -119,7 +119,7 @@ func callback_build() func(line string) error {
 }
 
 func (self *context) Start(callback func(string) error) {
-	cmd, err := start(callback, "go", "build", "-o", "/dev/null", self.file)
+	cmd, err := start(callback, "gobuild.sh", self.file)
 	if err == nil {
 		self.cmd = append(self.cmd, cmd)
 	} else {
