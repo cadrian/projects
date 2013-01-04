@@ -108,23 +108,15 @@ gofile=\$(basename \$emacsfile)
 gosrc=\$(dirname \$emacsfile)
 gopkg=\${gosrc#\$GOPATH/src/}
 
-export TMPDIR=\${TMPDIR:-/tmp}/gobuild-\$USER/\$gopkg
-
-mkdir -p \$(dirname \$TMPDIR)
-lockfile-create --use-pid \$TMPDIR
-unlock() {
-    lockfile-remove \$TMPDIR
-}
-trap unlock EXIT QUIT TERM INT
+export TMPDIR=\${TMPDIR:-/tmp}/gobuild-\$USER/\$\$
+rm -rf \$TMPDIR
+mkdir -p \$TMPDIR
 
 if \$verbose; then
     export LOG=\$TMPDIR.log
     echo "log to \$LOG"
     shift
 fi
-
-rm -rf \$TMPDIR
-mkdir -p \$TMPDIR
 
 cp -lf \$gosrc/*.go \$TMPDIR
 rm -f \$TMPDIR/*_flymake.go
@@ -133,6 +125,7 @@ if [ \${gofile%_flymake.go} = \$gofile ]; then
 else
     actualfile=\$TMPDIR/\${gofile%_flymake.go}.go
 fi
+rm -f \$actualfile
 cp -lf \$emacsfile \$actualfile
 
 if \$verbose; then
