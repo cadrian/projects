@@ -124,15 +124,22 @@ if \$verbose; then
     shift
 fi
 
-cp -lf \$gosrc/*.go \$TMPDIR
-rm -f \$TMPDIR/*_flymake.go
-if [ \${gofile%_flymake.go} = \$gofile ]; then
+if grep -q '^package main$' \$emacsfile; then
+    # a main source
     actualfile=\$TMPDIR/\$gofile
+    cp -lf \$emacsfile \$actualfile
 else
-    actualfile=\$TMPDIR/\${gofile%_flymake.go}.go
+    # some go package
+    cp -lf \$gosrc/*.go \$TMPDIR
+    rm -f \$TMPDIR/*_flymake.go
+    if [ \${gofile%_flymake.go} = \$gofile ]; then
+        actualfile=\$TMPDIR/\$gofile
+    else
+        actualfile=\$TMPDIR/\${gofile%_flymake.go}.go
+    fi
+    rm -f \$actualfile
+    cp -lf \$emacsfile \$actualfile
 fi
-rm -f \$actualfile
-cp -lf \$emacsfile \$actualfile
 
 actualfile_pattern="^.*/\$(basename \$actualfile)"
 
