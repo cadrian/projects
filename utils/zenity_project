@@ -41,6 +41,10 @@ if project=$(yad --width 300 --height 400 --list --title "Open a project" --colu
 set -p
 export PROJECT_PACK=$pack
 
+if [ x"$SSH_AGENT_PID" != x ]; then
+    ssh-add
+fi
+
 if [ -e \$HOME/.bash_profile ]; then
     . \$HOME/.bash_profile
 elif [ -e $HOME/.bashrc ]; then
