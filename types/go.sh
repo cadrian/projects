@@ -87,6 +87,11 @@ make_emacs() {
 (project-dired)
 EOF
 
+    TMPDIR=${TMPDIR:-/tmp}
+    if [ "$(df $TMPDIR)" != "$(df $PROJECT_DEVDIR)" ]; then
+        TMPDIR="$PROJECT_DEVDIR"/.tmp
+    fi
+
     cat > $PROJECT/bin/gobuild.sh <<EOF
 #!/bin/sh
 export GOPATH="$PROJECT_DEVDIR"
@@ -108,7 +113,8 @@ gofile=\$(basename \$emacsfile)
 gosrc=\$(dirname \$emacsfile)
 gopkg=\${gosrc#\$GOPATH/src/}
 
-export TMPDIR=\${TMPDIR:-/tmp}/gobuild-\$USER/\$\$
+export TMPDIR=$TMPDIR/gobuild-\$USER/\$\$
+
 rm -rf \$TMPDIR
 mkdir -p \$TMPDIR
 
@@ -128,6 +134,8 @@ fi
 rm -f \$actualfile
 cp -lf \$emacsfile \$actualfile
 
+actualfile_pattern="^.*/\$(basename \$actualfile)"
+
 if \$verbose; then
     {
         echo file: \$gofile
@@ -140,10 +148,10 @@ if \$verbose; then
         echo
     } > \$LOG
 
-    go build -race \$TMPDIR/*.go 2>&1 | tee -a \$LOG
+    go build \$TMPDIR/*.go 2>&1 | tee -a \$LOG
 else
-    go build -race \$TMPDIR/*.go 2>&1
-fi | grep -E "^\$actualfile:" | sed "s&^\$actualfile&\$emacsfile&"
+    go build \$TMPDIR/*.go 2>&1
+fi | grep -E "\$actualfile_pattern:" | sed "s&\$actualfile_pattern&\$emacsfile&"
 EOF
     chmod +x $PROJECT/bin/gobuild.sh
 }
