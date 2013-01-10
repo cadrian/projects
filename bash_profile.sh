@@ -415,6 +415,10 @@ fconf() {
     findpwd \( -iname \*.conf -o -iname \*.ini -o -iname \*make\* \) -exec grep -Hn "$@" {} \;
 }
 
+fgo() {
+    findpwd -iname \*.go -exec grep -Hn "$@" {} \;
+}
+
 # Global finders
 
 gf() {
@@ -467,6 +471,10 @@ gflog() {
 
 gfconf() {
     gf fconf "$@"
+}
+
+gfgo() {
+    gf fgo "$@"
 }
 
 
