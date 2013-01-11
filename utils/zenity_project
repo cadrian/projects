@@ -41,10 +41,6 @@ if project=$(yad --width 300 --height 400 --list --title "Open a project" --colu
 set -p
 export PROJECT_PACK=$pack
 
-if [ x"$SSH_AGENT_PID" != x ]; then
-    ssh-add
-fi
-
 if [ -e \$HOME/.bash_profile ]; then
     . \$HOME/.bash_profile
 elif [ -e $HOME/.bashrc ]; then
@@ -52,6 +48,7 @@ elif [ -e $HOME/.bashrc ]; then
 fi
 . \$PROJECT_PACK/bash_profile.sh
 
+_ssh_agent_check
 go_to_project $project
 echo "DISPLAY=$DISPLAY emacs -g 132x50" | at now 2>/dev/null
 EOF

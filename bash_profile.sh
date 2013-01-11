@@ -528,3 +528,20 @@ _project_tag_all() {
           printf("'"$(tput el)"'\n");
        }'
 }
+
+ssh_agent_info=${TMPDIR:-/tmp}/ssh_agent_$USER
+
+_ssh_agent_check() {
+    if [ $(tty) != "not a tty" -a -r $ssh_agent_info ]; then
+        . $ssh_agent_info
+        ssh-add
+    fi
+}
+
+ssh_agent_start() {
+    if [ \! -r $ssh_agent_info ]; then
+        at now 2>/dev/null <<EOF
+ssh-agent > $ssh_agent_info
+EOF
+    fi
+}

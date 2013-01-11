@@ -47,6 +47,7 @@ elif [ -e $HOME/.bashrc ]; then
 fi
 . \$PROJECT_PACK/bash_profile.sh
 
+_ssh_agent_check
 go_to_project $project
 echo "DISPLAY=$DISPLAY emacs -g 132x50" | at now 2>/dev/null
 
