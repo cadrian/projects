@@ -375,48 +375,52 @@ findpwd() {
     find "$(pwd)" \( -name CVS -o -name .svn -o -name .git -o -name '@*' -o -name tmp \) -prune -o "$@"
 }
 
+nbprocs() {
+    echo -P$((2 * $(cat /proc/cpuinfo|grep '^processor'|wc -l)))
+}
+
 #fgrep() {
-#    findpwd -type f -exec grep -Hn "$@" {} \;
+#    findpwd -type f -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
 #}
 
 fpy() {
-    findpwd \( -iname \*.py -o -iname \*.config \) -exec grep -Hn "$@" {} \;
+    findpwd \( -iname \*.py -o -iname \*.config \) -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
 }
 
 fc() {
-    findpwd -iname \*.[ch] -exec grep -Hn "$@" {} \;
+    findpwd -iname \*.[ch] -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
 }
 
 fcpp() {
-    findpwd \( -iname \*.[ch]pp -o -iname \*.[ch] \) -exec grep -Hn "$@" {} \;
+    findpwd \( -iname \*.[ch]pp -o -iname \*.[ch] \) -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
 }
 
 fbas() {
-    findpwd \( -iname \*.cls -o -iname \*.bas -o -iname \*.frm \)  -exec grep -Hn "$@" {} \;
+    findpwd \( -iname \*.cls -o -iname \*.bas -o -iname \*.frm \)  -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
 }
 
 fj() {
-    findpwd -iname \*.java -exec grep -Hn "$@" {} \;
+    findpwd -iname \*.java -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
 }
 
 fhtml() {
-    findpwd -iname \*.html -exec grep -Hn "$@" {} \;
+    findpwd -iname \*.html -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
 }
 
 fe() {
-    findpwd -iname \*.e -exec grep -Hn "$@" {} \;
+    findpwd -iname \*.e -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
 }
 
 flog() {
-    findpwd \( -iname \*.log -o -iname \*.dbg -o -iname \*.txt -o -iname \*.[0-9][0-9][0-9] \) -exec grep -Hn "$@" {} \;
+    findpwd \( -iname \*.log -o -iname \*.dbg -o -iname \*.txt -o -iname \*.[0-9][0-9][0-9] \) -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
 }
 
 fconf() {
-    findpwd \( -iname \*.conf -o -iname \*.ini -o -iname \*make\* \) -exec grep -Hn "$@" {} \;
+    findpwd \( -iname \*.conf -o -iname \*.ini -o -iname \*make\* \) -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
 }
 
 fgo() {
-    findpwd -iname \*.go -exec grep -Hn "$@" {} \;
+    findpwd -iname \*.go -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
 }
 
 # Global finders
@@ -475,30 +479,6 @@ gfconf() {
 
 gfgo() {
     gf fgo "$@"
-}
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Useful functions
-
-fc() {
-    find $(pwd) \( -name CVS -o -name .svn -o -name .git \) -prune -o \( -name \*.[ch] -o -name \*.[ch]pp \) -exec grep -Hn "$@" {} \;
-}
-
-fe() {
-    find $(pwd) \( -name CVS -o -name .svn -o -name .git \) -prune -o -name \*.e -exec grep -Hn "$@" {} \;
-}
-
-fj() {
-    find $(pwd) \( -name CVS -o -name .svn -o -name .git \) -prune -o -name \*.java -exec grep -Hn "$@" {} \;
-}
-
-fpy() {
-    find $(pwd) \( -name CVS -o -name .svn -o -name .git \) -prune -o -name \*.py -exec grep -Hn "$@" {} \;
-}
-
-fly() {
-    find $(pwd) \( -name CVS -o -name .svn -o -name .git \) -prune -o \( -name \*.ly -o -name \*.ily \) -exec grep -Hn "$@" {} \;
 }
 
 
