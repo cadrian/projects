@@ -175,7 +175,7 @@ export PROJECT_DEVDIR=\$(readlink \$PROJECT/dev)
 test x\$1 == x-a || rm -f \$LOG
 touch \$LOG
 echo "\$(date -R) - updating $PROJECT for \$PROJECT" >>\$LOG
-find \$PROJECT_DEVDIR -name tmp -prune -o -name \\*.go -print | etags \$@ -f \$TAGS --language-force=Go -L- 2>>\$LOG|| echo "Brand new project: no file tagged."
+find \$PROJECT_DEVDIR/src -name \\*.go -print | etags \$@ -f \$TAGS --language-force=Go -L- 2>>\$LOG|| echo "Brand new project: no file tagged."
 
 if [ -d \$PROJECT/dep ]; then
     for dep in \$(echo \$PROJECT/dep/*); do
@@ -193,7 +193,7 @@ EOF
 export PROJECT=\${PROJECT:-$PROJECT}
 export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
 export PROJECT_DEVDIR=\$(readlink \$PROJECT/dev)
-find \$PROJECT_DEVDIR -name tmp -prune -o -name \\*.go -print 2>/dev/null
+find \$PROJECT_DEVDIR/src -name \\*.go -print 2>/dev/null
 
 if [ -d \$PROJECT/dep ]; then
     for dep in \$(echo \$PROJECT/dep/*); do
