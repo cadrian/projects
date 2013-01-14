@@ -530,17 +530,22 @@ _project_tag_all() {
 }
 
 ssh_agent_info=${TMPDIR:-/tmp}/ssh_agent_$USER
+ssh_agent_flag=${TMPDIR:-/tmp}/ssh_agent_$USER.flag
 
 _ssh_agent_check() {
     if [ $(tty) != "not a tty" -a -r $ssh_agent_info ]; then
         . $ssh_agent_info
-        ssh-add
+        if [ \! -r $ssh_agent_flag ]; then
+            ssh-add
+            touch $ssh_agent_flag
+        fi
     fi
 }
 
 ssh_agent_start() {
     if [ \! -r $ssh_agent_info ]; then
         at now 2>/dev/null <<EOF
+rm -f $ssh_agent_flag
 ssh-agent > $ssh_agent_info
 EOF
     fi

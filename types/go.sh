@@ -56,7 +56,7 @@ make_emacs() {
 (project-def "$PROJECT_NAME-project"
       '((basedir          "$PROJECT_DEVDIR")
         (src-patterns     ("*.go"))
-        (ignore-patterns  ("*.[568oa]"))
+        (ignore-patterns  ("*.[568oa]" "*.test"))
         (tags-file        "$PROJECT/.mk/TAGS")
         (file-list-cache  "$PROJECT/.mk/files")
         (open-files-cache "$PROJECT/.mk/open-files")
@@ -163,6 +163,8 @@ else
     go build \$gopkg 2>&1
     go test -c \$gopkg 2>&1
 fi | grep -E "\$actualfile_pattern:" | sed "s&\$actualfile_pattern&\$emacsfile&"
+
+rm -f \$gosrc/*.test
 EOF
     chmod +x $PROJECT/bin/gobuild.sh
 }
