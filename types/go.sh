@@ -94,7 +94,6 @@ EOF
 
     cat > $PROJECT/bin/gobuild.sh <<EOF
 #!/bin/sh
-export GOPATH="$PROJECT_DEVDIR"
 
 if [ x\$1 = x-v ]; then
     verbose=true
@@ -111,12 +110,13 @@ fi
 emacsfile="\$1"
 gofile=\$(basename \$emacsfile)
 gosrc=\$(dirname \$emacsfile)
-gopkg=\${gosrc#\$GOPATH/src/}
+gopkg=\${gosrc#"$PROJECT_DEVDIR"/src/}
 
 export TMPDIR=$TMPDIR/gobuild-\$USER/\$\$
+export GOPATH=\$TMPDIR:"$PROJECT_DEVDIR"
 
 rm -rf \$TMPDIR
-mkdir -p \$TMPDIR
+mkdir -p \$TMPDIR/src/\$gopkg
 
 if \$verbose; then
     export LOG=\$TMPDIR.log
@@ -130,34 +130,38 @@ if grep -q '^package main$' \$emacsfile; then
     cp -lf \$emacsfile \$actualfile
 else
     # some go package
-    cp -lf \$gosrc/*.go \$TMPDIR
-    rm -f \$TMPDIR/*_flymake.go
+    cp -lf \$gosrc/*.go \$TMPDIR/src/\$gopkg
+    rm -f \$TMPDIR/src/\$gopkg/*_flymake.go
     if [ \${gofile%_flymake.go} = \$gofile ]; then
-        actualfile=\$TMPDIR/\$gofile
+        actualfile=\$TMPDIR/src/\$gopkg/\$gofile
     else
-        actualfile=\$TMPDIR/\${gofile%_flymake.go}.go
+        actualfile=\$TMPDIR/src/\$gopkg/\${gofile%_flymake.go}.go
     fi
     rm -f \$actualfile
     cp -lf \$emacsfile \$actualfile
 fi
 
-actualfile_pattern="^.*/\$(basename \$actualfile)"
+actualfile_pattern="^.*/\$(basename \${actualfile%.go}\\\\.go)"
 
 if \$verbose; then
     {
-        echo file: \$gofile
-        echo pkg:  \$gopkg
-        echo src:  \$gosrc
+        echo "file: \$gofile"
+        echo "pkg:  \$gopkg (\$actualfile)"
+        echo "src:  \$gosrc (\$TMPDIR/src/\$gopkg)"
+        echo
         ls \$gosrc
         echo
         echo \$TMPDIR
-        ls \$TMPDIR
+        ls \$TMPDIR/src/\$gopkg
         echo
+        echo "\$actualfile_pattern"
     } > \$LOG
 
-    go build \$TMPDIR/*.go 2>&1 | tee -a \$LOG
+    go build \$gopkg 2>&1 | tee -a \$LOG
+    go test -c \$gopkg 2>&1 | tee -a \$LOG
 else
-    go build \$TMPDIR/*.go 2>&1
+    go build \$gopkg 2>&1
+    go test -c \$gopkg 2>&1
 fi | grep -E "\$actualfile_pattern:" | sed "s&\$actualfile_pattern&\$emacsfile&"
 EOF
     chmod +x $PROJECT/bin/gobuild.sh
