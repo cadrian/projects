@@ -43,7 +43,7 @@ export PROJECT_DEFAULT_PS1="$PS1"
 
 # Go to the given project.
 # $1 => project name (defaults to current project, if it exists)
-go_to_project() {
+function go_to_project {
     if [ x"$1" == x"-fast" ]; then
         FAST=-fast
         shift
@@ -98,7 +98,7 @@ go_to_project() {
 
 # Temporarily go to the given project. "dependent" because completion will propose deps of the current project.
 # $1 => project name (defaults to current project, if it exists)
-go_to_dependent_project() {
+function go_to_dependent_project {
     if [ -z "$CURRENT_PROJECT" ]; then
         echo "Please go to some project first: aborting." >&2
         return 1
@@ -122,7 +122,7 @@ go_to_dependent_project() {
 # $1 => project name
 # $2 => project type
 # $3 => project development directory
-create_new_project() {
+function create_new_project {
     PROJECT=$PROJECTS_DIR/$1
     PROJECT_FACTORY=$PROJECT_PACK/types/$2.sh
     PROJECT_DEVDIR=$(cd $3/. && pwd)
@@ -162,7 +162,7 @@ create_new_project() {
 
 
 # Update an existing project with the latest changes in the project manager.
-update_project() {
+function update_project {
     PROJECT=$PROJECTS_DIR/$CURRENT_PROJECT
 
     if [ -z $CURRENT_PROJECT ]; then
@@ -196,7 +196,7 @@ update_project() {
 
 # Create a new project.
 # $1 => project name to link to current
-link_dependency() {
+function link_dependency {
     DEP_PROJECT=$PROJECTS_DIR/$1
     PROJECT=$PROJECTS_DIR/$CURRENT_PROJECT
 
@@ -230,7 +230,7 @@ link_dependency() {
 
 
 # List all known projects.
-list_projects() {
+function list_projects {
     format="%-16s | %-8s | %-80s\n"
     printf "$format" Name Type "Home dev directory"
     printf "$format" "----------------" "--------" "--------------------------------------------------------------------------------"
@@ -243,22 +243,22 @@ list_projects() {
 
 
 # Bash completion
-_list_projects() {
+function _list_projects {
     find $PROJECTS_DIR -mindepth 1 -maxdepth 1 -type d | sed 's!^'"$PROJECTS_DIR/"'!!' | sort -u
 }
 
-_list_types() {
+function _list_types {
     find $PROJECT_PACK/types -name \*.sh -executable | sed 's!^'"$PROJECT_PACK/types/"'\(.*\)\.sh$!\1!' | sort -u
 }
 
-_list_deps() {
+function _list_deps {
     {
         test -d $PROJECTS_DIR/$CURRENT_PROJECT/dep && find $PROJECTS_DIR/$CURRENT_PROJECT/dep -mindepth 1 -maxdepth 1 -type l | sed 's!^'"$PROJECTS_DIR/$CURRENT_PROJECT/dep/"'!!'
         echo $CURRENT_PROJECT
     } | sort -u
 }
 
-_go_to_project_completion() {
+function _go_to_project_completion {
     local cur extglob
     shopt extglob|grep -q on
     extglob=$?
@@ -278,7 +278,7 @@ _go_to_project_completion() {
 }
 complete -F _go_to_project_completion go_to_project gp link_dependency lp
 
-_go_to_dependent_project_completion() {
+function _go_to_dependent_project_completion {
     local cur extglob
     shopt extglob|grep -q on
     extglob=$?
@@ -298,7 +298,7 @@ _go_to_dependent_project_completion() {
 }
 complete -F _go_to_dependent_project_completion go_to_dependent_project cdp
 
-_create_new_project_completion() {
+function _create_new_project_completion {
     local cur extglob
     shopt extglob|grep -q on
     extglob=$?
@@ -325,7 +325,7 @@ complete -F _create_new_project_completion create_new_project np
 
 
 #internals for opening a new tab. Used by project_tabbed() below and by the new_tab.sh script
-_project_tabbed() {
+function _project_tabbed {
     windowid=$1
     dir=$2
     prj=$3
@@ -352,7 +352,7 @@ _project_tabbed() {
 }
 
 # Open a new tab in gnome-terminal, for the same project.
-project_tabbed() {
+function project_tabbed {
     if [ -z "$CURRENT_PROJECT" ]; then
         echo "Please go to some project first: aborting." >&2
         return 1
@@ -371,61 +371,64 @@ project_tabbed() {
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Finders
 
-findpwd() {
+function findpwd {
     find "$(pwd)" \( -name CVS -o -name .svn -o -name .git -o -name '@*' -o -name tmp \) -prune -o "$@"
 }
 
-nbprocs() {
+function nbprocs {
     echo -P$((2 * $(cat /proc/cpuinfo|grep '^processor'|wc -l)))
 }
 
-#fgrep() {
-#    findpwd -type f -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
-#}
+function fgrep {
+    findpwd -type f -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
+}
+# fgrep is often an alias; be sure to remove it
+alias fgrep=
+unalias fgrep
 
-fpy() {
+function fpy {
     findpwd \( -iname \*.py -o -iname \*.config \) -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
 }
 
-fc() {
+function fc {
     findpwd -iname \*.[ch] -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
 }
 
-fcpp() {
+function fcpp {
     findpwd \( -iname \*.[ch]pp -o -iname \*.[ch] \) -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
 }
 
-fbas() {
+function fbas {
     findpwd \( -iname \*.cls -o -iname \*.bas -o -iname \*.frm \)  -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
 }
 
-fj() {
+function fj {
     findpwd -iname \*.java -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
 }
 
-fhtml() {
+function fhtml {
     findpwd -iname \*.html -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
 }
 
-fe() {
+function fe {
     findpwd -iname \*.e -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
 }
 
-flog() {
+function flog {
     findpwd \( -iname \*.log -o -iname \*.dbg -o -iname \*.txt -o -iname \*.[0-9][0-9][0-9] \) -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
 }
 
-fconf() {
+function fconf {
     findpwd \( -iname \*.conf -o -iname \*.ini -o -iname \*make\* \) -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
 }
 
-fgo() {
+function fgo {
     findpwd -iname \*.go -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
 }
 
 # Global finders
 
-gf() {
+function gf {
     (cd $(readlink -f $PROJECTS_DIR/$CURRENT_PROJECT/dev); "$@")
 
     dep_dir=$PROJECTS_DIR/$CURRENT_PROJECT/dep
@@ -437,47 +440,47 @@ gf() {
     fi
 }
 
-gfgrep() {
-    gf fgrep "$@"
+function gfgrep {
+    gf fg "$@"
 }
 
-gfpy() {
+function gfpy {
     gf fpy "$@"
 }
 
-gfc() {
+function gfc {
     gf fc "$@"
 }
 
-gfcpp() {
+function gfcpp {
     gf fcpp "$@"
 }
 
-gfbas() {
+function gfbas {
     gf fbas "$@"
 }
 
-gfj() {
+function gfj {
     gf fj "$@"
 }
 
-gfhtml() {
+function gfhtml {
     gf fhtml "$@"
 }
 
-gfe() {
+function gfe {
     gf fe "$@"
 }
 
-gflog() {
+function gflog {
     gf flog "$@"
 }
 
-gfconf() {
+function gfconf {
     gf fconf "$@"
 }
 
-gfgo() {
+function gfgo {
     gf fgo "$@"
 }
 
@@ -497,7 +500,7 @@ alias tab=project_tabbed
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Internal functions
 
-_project_tag_all() {
+function _project_tag_all {
     project=$1
     nb=$($project/bin/find_all.sh | wc -l)
     cols=$(stty size|awk '{print $2}')
@@ -532,7 +535,7 @@ _project_tag_all() {
 ssh_agent_info=${TMPDIR:-/tmp}/ssh_agent_$USER
 ssh_agent_flag=${TMPDIR:-/tmp}/ssh_agent_$USER.flag
 
-_ssh_agent_check() {
+function _ssh_agent_check {
     if [ $(tty) != "not a tty" -a -r $ssh_agent_info ]; then
         . $ssh_agent_info
         if [ \! -r $ssh_agent_flag ]; then
@@ -542,7 +545,7 @@ _ssh_agent_check() {
     fi
 }
 
-ssh_agent_start() {
+function ssh_agent_start {
     if [ \! -r $ssh_agent_info ]; then
         at now 2>/dev/null <<EOF
 rm -f $ssh_agent_flag
