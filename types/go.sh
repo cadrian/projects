@@ -81,6 +81,7 @@ make_emacs() {
 (push '(".+\\\\.go$" $PROJECT_NAME-flymake-go-init) flymake-allowed-file-name-masks)
 
 (add-hook 'go-mode-hook 'flymake-mode)
+(add-hook 'before-save-hook #'gofmt-before-save)
 
 (set-frame-name "Emacs: $PROJECT_NAME")
 (project-load "$PROJECT_NAME-project")
