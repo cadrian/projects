@@ -258,7 +258,7 @@ function _list_deps {
     } | sort -u
 }
 
-function _go_to_project_completion {
+function _go_to_project_completion_ {
     local cur extglob
     shopt extglob|grep -q on
     extglob=$?
@@ -268,7 +268,7 @@ function _go_to_project_completion {
     # the current word to be completed, can be empty
     cur="${COMP_WORDS[COMP_CWORD]}"
 
-    if [ $COMP_CWORD -eq 1 ]; then
+    if [ $COMP_CWORD -eq $((1 + $1)) ]; then
         COMPREPLY=($(compgen -W "$(_list_projects)" -- "$cur"))
     fi
 
@@ -276,9 +276,12 @@ function _go_to_project_completion {
         shopt -u extglob
     fi
 }
+function _go_to_project_completion {
+    _go_to_project_completion_ 0
+}
 complete -F _go_to_project_completion go_to_project gp link_dependency lp
 
-function _go_to_dependent_project_completion {
+function _go_to_dependent_project_completion_ {
     local cur extglob
     shopt extglob|grep -q on
     extglob=$?
@@ -288,7 +291,7 @@ function _go_to_dependent_project_completion {
     # the current word to be completed, can be empty
     cur="${COMP_WORDS[COMP_CWORD]}"
 
-    if [ $COMP_CWORD -eq 1 ]; then
+    if [ $COMP_CWORD -eq $((1 + $1)) ]; then
         COMPREPLY=($(compgen -W "$(_list_deps)" -- "$cur"))
     fi
 
@@ -296,9 +299,13 @@ function _go_to_dependent_project_completion {
         shopt -u extglob
     fi
 }
+function _go_to_dependent_project_completion {
+    _go_to_dependent_project_completion_ 0
+}
+
 complete -F _go_to_dependent_project_completion go_to_dependent_project cdp
 
-function _create_new_project_completion {
+function _create_new_project_completion_ {
     local cur extglob
     shopt extglob|grep -q on
     extglob=$?
@@ -308,7 +315,7 @@ function _create_new_project_completion {
     # the current word to be completed, can be empty
     cur="${COMP_WORDS[COMP_CWORD]}"
 
-    case $COMP_CWORD in
+    case $(($COMP_CWORD - $1)) in
         2)
             COMPREPLY=($(compgen -W "$(_list_types)" -- "$cur"))
             ;;
@@ -320,6 +327,9 @@ function _create_new_project_completion {
     if [ $extglob = 1 ]; then
         shopt -u extglob
     fi
+}
+function _create_new_project_completion {
+    _create_new_project_completion_ 0
 }
 complete -F _create_new_project_completion create_new_project np
 
@@ -488,13 +498,54 @@ function gfgo {
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Some aliases
 
-alias  gp=go_to_project
-alias cdp=go_to_dependent_project
-alias  np=create_new_project
-alias  lp=link_dependency
-alias lsp=list_projects
-alias upp=update_project
-alias tab=project_tabbed
+#alias  gp=go_to_project
+#alias cdp=go_to_dependent_project
+#alias  np=create_new_project
+#alias  lp=link_dependency
+#alias lsp=list_projects
+#alias upp=update_project
+#alias tab=project_tabbed
+
+function p {
+    fun=$1
+    shift
+    case "$fun" in
+        go)          go_to_project           "$@" ; return $? ;;
+        godep)       go_to_dependent_project "$@" ; return $? ;;
+        new)         create_new_project      "$@" ; return $? ;;
+        ln|link)     link_dependency         "$@" ; return $? ;;
+        ls|list)     list_projects           "$@" ; return $? ;;
+        up|update)   update_project          "$@" ; return $? ;;
+        tab)         project_tabbed          "$@" ; return $? ;;
+        *)
+            echo "Unknown command: $fun" >&2
+            return 1
+            ;;
+    esac
+}
+
+function _p_completion {
+    # the possible completion words
+    COMPREPLY=()
+    # the current word to be completed, can be empty
+    cur="${COMP_WORDS[COMP_CWORD]}"
+
+    if [ $COMP_CWORD -eq 1 ]; then
+        COMPREPLY=($(compgen -W "go godep new ln link ls list up update tab" -- "$cur"))
+    else
+        case ${COMP_WORDS[1]} in
+        go)          _go_to_project_completion_           1 ;;
+        godep)       _go_to_dependent_project_completion_ 1 ;;
+        new)         _create_new_project_completion_      1 ;;
+        ln|link)     _go_to_project_completion_           1 ;;
+        ls|list)     ;;
+        up|update)   ;;
+        tab)         ;;
+        esac
+    fi
+}
+
+complete -F _p_completion p
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
