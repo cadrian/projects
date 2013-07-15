@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012, Cyril Adrian <cyril.adrian@gmail.com> All rights reserved.
+# Copyright (c) 2010-2013, Cyril Adrian <cyril.adrian@gmail.com> All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without modification, are permitted provided that
 # the following conditions are met:
@@ -496,15 +496,63 @@ function gfgo {
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Some aliases
+# Commands hub
 
-#alias  gp=go_to_project
-#alias cdp=go_to_dependent_project
-#alias  np=create_new_project
-#alias  lp=link_dependency
-#alias lsp=list_projects
-#alias upp=update_project
-#alias tab=project_tabbed
+function _p_help {
+    cat <<EOF
+Usage: p <cmd> <args...>
+
+Projects management hub command.
+
+The available sub-commands are:
+
+go <project>
+                Go to the given project, which must exist (see "new")
+
+godep <project>
+                Go to a dependent project. Not very useful.
+
+new <project> <dir> <type>
+                Create a new project. The arguments are:
+                - the project name
+                - the project root directory
+                - the project type (use completion to know the currently
+                  available types: java, python, and so on)
+
+ln <project>
+link <project>
+                Link a dependent project (mostly useful for tagging)
+
+ls
+list
+                List the known projects
+
+up
+update
+                Update the project meta files using the latest version
+                of the project manager
+
+tab
+                Open a new console tab (usually Gnome's) and goes to the
+                same project as the current console.
+                Only works with some consoles.
+
+help
+-h
+--help
+usage
+                well... this screen :-)
+
+
+Copyright (C) 2010-2013 Cyril Adrian <cyril.adrian@gmail.com>
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED.
+
+EOF
+}
 
 function p {
     fun=$1
@@ -517,8 +565,16 @@ function p {
         ls|list)     list_projects           "$@" ; return $? ;;
         up|update)   update_project          "$@" ; return $? ;;
         tab)         project_tabbed          "$@" ; return $? ;;
+        help|-h|--help|usage)
+            _p_help
+            return 0
+            ;;
         *)
-            echo "Unknown command: $fun" >&2
+            {
+                echo "Unknown command: $fun"
+                echo
+                _p_help
+            } >&2
             return 1
             ;;
     esac
