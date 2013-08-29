@@ -37,7 +37,7 @@ CACHE=${XDG_CACHE_HOME:-"$HOME/.cache"}/zenity_project
 if project=$(yad --width 300 --height 400 --list --title "Open a project" --column "Project" --search-column=1 --regex-search --no-headers --separator="" < "$CACHE"); then
     if [ x"$project" != x ]; then
         PROFILE=$PROJECTS_DIR/$project/.zenity_profile
-        test -e $PROFILE || cat > $PROFILE <<EOF
+        cat > $PROFILE <<EOF
 set -p
 export PROJECT_PACK=$pack
 
@@ -50,7 +50,10 @@ fi
 
 _ssh_agent_check
 go_to_project $project
-echo "DISPLAY=$DISPLAY emacs -g 132x50" | at now 2>/dev/null
+cat | at now 2>/dev/null <<eof
+DISPLAY=$DISPLAY; export DISPLAY
+exec emacs -g 132x50
+eof
 EOF
 
         if [ -x $(which gnome-terminal) ]; then
