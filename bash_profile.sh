@@ -509,8 +509,10 @@ The available sub-commands are:
 go <project>
                 Go to the given project, which must exist (see "new")
 
-godep <project>
-                Go to a dependent project. Not very useful.
+cd {<project>}
+                Changes directory to a dependent project. Mostly useful in
+                its simplest form: cd to the root directory of the current
+                project.
 
 new <project> <dir> <type>
                 Create a new project. The arguments are:
@@ -559,7 +561,7 @@ function p {
     shift
     case "$fun" in
         go)          go_to_project           "$@" ; return $? ;;
-        godep)       go_to_dependent_project "$@" ; return $? ;;
+        cd)          go_to_dependent_project "$@" ; return $? ;;
         new)         create_new_project      "$@" ; return $? ;;
         ln|link)     link_dependency         "$@" ; return $? ;;
         ls|list)     list_projects           "$@" ; return $? ;;

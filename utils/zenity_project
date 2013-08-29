@@ -50,9 +50,10 @@ fi
 
 _ssh_agent_check
 go_to_project $project
-cat | at now 2>/dev/null <<eof
+
+at now 2>/dev/null <<eof
 DISPLAY=$DISPLAY; export DISPLAY
-exec emacs -g 132x50
+nohup emacs -g 132x50 &
 eof
 EOF
 
