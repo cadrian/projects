@@ -96,25 +96,45 @@ function go_to_project {
 }
 
 
-# Temporarily go to the given project. "dependent" because completion will propose deps of the current project.
+# Temporarily go to the given project or directory. "dependent" because completion will propose deps of the current project.
 # $1 => project name (defaults to current project, if it exists)
+#       or directory in the current project
 function go_to_dependent_project {
     if [ -z "$CURRENT_PROJECT" ]; then
         echo "Please go to some project first: aborting." >&2
         return 1
     fi
 
-    if [ -z "$1" -o "$1" == "$CURRENT_PROJECT" ]; then
+    if [ -z "$1" ]; then
         dep=dev
         proj=$CURRENT_PROJECT
+        dir=.
+    elif [ "$1" == "$CURRENT_PROJECT" ]; then
+        dep=dev
+        proj=$CURRENT_PROJECT
+        if [ -z "$2" -o ! -d "$PROJECTS_DIR/$CURRENT_PROJECT/dev/$2" ]; then
+            dir=.
+        else
+            dir="$2"
+        fi
+    elif [ -d "$PROJECTS_DIR/$CURRENT_PROJECT/dev/$1" ]; then
+        dep=dev
+        proj=$CURRENT_PROJECT
+        dir="$1"
     else
         dep=dep/$1
         proj=$1
+        if [ -z "$2" -o ! -d "$PROJECTS_DIR/$CURRENT_PROJECT/dep/$1/$2" ]; then
+            dir=.
+        else
+            dir="$2"
+        fi
     fi
 
     PROJECT=$PROJECTS_DIR/$CURRENT_PROJECT
     cd $(readlink $PROJECT/$dep)
     test -x $PROJECTS_DIR/$proj/godep && . $PROJECTS_DIR/$proj/godep
+    cd "$dir"
 }
 
 
@@ -291,8 +311,39 @@ function _go_to_dependent_project_completion_ {
     # the current word to be completed, can be empty
     cur="${COMP_WORDS[COMP_CWORD]}"
 
-    if [ $COMP_CWORD -eq $((1 + $1)) ]; then
-        COMPREPLY=($(compgen -W "$(_list_deps)" -- "$cur"))
+    if [ $COMP_CWORD -gt $1 ]; then
+        COMPREPLY=(
+            $(
+                compdirs=0
+                if [ $COMP_CWORD -eq $((1 + $1)) ]; then
+                    compgen -W "$(_list_deps)" -- "$cur"
+                    cd $(readlink "$PROJECTS_DIR/$CURRENT_PROJECT/dev")
+                    compdirs=1
+                elif [ $COMP_CWORD -eq $((2 + $1)) ]; then
+                    dep="${COMP_WORDS[$((1 + $1))]}"
+                    if [ -e "$PROJECTS_DIR/$CURRENT_PROJECT/dep/$dep" ]; then
+                        cd $(readlink "$PROJECTS_DIR/$CURRENT_PROJECT/dep/$dep")
+                    else
+                        cd $(readlink "$PROJECTS_DIR/$CURRENT_PROJECT/dev")
+                    fi
+                    compdirs=1
+                fi
+                if [ $compdirs -eq 1 ]; then
+                    dirs=$(
+                        if [ -z "$cur" ]; then
+                            find . -mindepth 1 -maxdepth 1 -name .?\* -prune -o -type d -print | cut -c3-
+                        elif [ -d $cur ]; then
+                            find $cur -mindepth 1 -maxdepth 1 -name .?\* -prune -o -type d -print
+                        elif [ $(dirname $cur) = '.' ]; then
+                            find . -mindepth 1 -maxdepth 1 -name .?\* -prune -o -type d -print | cut -c3-
+                        else
+                            find $(dirname $cur) -mindepth 1 -maxdepth 1 -name .?\* -prune -o -type d -print
+                        fi 2>/dev/null
+                    )
+                    compgen -d -o nospace -S / -W "$(echo $dirs)" -- "$cur"
+                fi
+            )
+        )
     fi
 
     if [ $extglob = 1 ]; then
@@ -589,11 +640,11 @@ function _p_completion {
     cur="${COMP_WORDS[COMP_CWORD]}"
 
     if [ $COMP_CWORD -eq 1 ]; then
-        COMPREPLY=($(compgen -W "go godep new ln link ls list up update tab" -- "$cur"))
+        COMPREPLY=($(compgen -W "go cd new ln link ls list up update tab" -- "$cur"))
     else
         case ${COMP_WORDS[1]} in
         go)          _go_to_project_completion_           1 ;;
-        godep)       _go_to_dependent_project_completion_ 1 ;;
+        cd)          _go_to_dependent_project_completion_ 1 ;;
         new)         _create_new_project_completion_      1 ;;
         ln|link)     _go_to_project_completion_           1 ;;
         ls|list)     ;;
