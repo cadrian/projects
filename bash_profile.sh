@@ -279,6 +279,7 @@ function _list_deps {
 }
 
 function _go_to_project_completion_ {
+    local IFS=$'\n'
     local cur extglob
     shopt extglob|grep -q on
     extglob=$?
@@ -289,7 +290,7 @@ function _go_to_project_completion_ {
     cur="${COMP_WORDS[COMP_CWORD]}"
 
     if [ $COMP_CWORD -eq $((1 + $1)) ]; then
-        COMPREPLY=($(compgen -W "$(_list_projects)" -- "$cur"))
+        COMPREPLY=($(compgen -S ' ' -W "$(_list_projects)" -- "$cur"))
     fi
 
     if [ $extglob = 1 ]; then
@@ -299,9 +300,10 @@ function _go_to_project_completion_ {
 function _go_to_project_completion {
     _go_to_project_completion_ 0
 }
-complete -F _go_to_project_completion go_to_project gp link_dependency lp
+complete -o nospace -F _go_to_project_completion go_to_project gp link_dependency lp
 
 function _go_to_dependent_project_completion_ {
+    local IFS=$'\n'
     local cur extglob
     shopt extglob|grep -q on
     extglob=$?
@@ -316,7 +318,7 @@ function _go_to_dependent_project_completion_ {
             $(
                 compdirs=0
                 if [ $COMP_CWORD -eq $((1 + $1)) ]; then
-                    compgen -W "$(_list_deps)" -- "$cur"
+                    compgen -S ' ' -W "$(_list_deps)" -- "$cur"
                     cd $(readlink "$PROJECTS_DIR/$CURRENT_PROJECT/dev")
                     compdirs=1
                 elif [ $COMP_CWORD -eq $((2 + $1)) ]; then
@@ -328,19 +330,17 @@ function _go_to_dependent_project_completion_ {
                     fi
                     compdirs=1
                 fi
-                if [ $compdirs -eq 1 ]; then
+                if [ $compdirs == 1 ]; then
                     dirs=$(
-                        if [ -z "$cur" ]; then
+                        if [ $(dirname "$cur") = '.' ]; then
                             find . -mindepth 1 -maxdepth 1 -name .?\* -prune -o -type d -print | cut -c3-
                         elif [ -d $cur ]; then
                             find $cur -mindepth 1 -maxdepth 1 -name .?\* -prune -o -type d -print
-                        elif [ $(dirname $cur) = '.' ]; then
-                            find . -mindepth 1 -maxdepth 1 -name .?\* -prune -o -type d -print | cut -c3-
                         else
                             find $(dirname $cur) -mindepth 1 -maxdepth 1 -name .?\* -prune -o -type d -print
                         fi 2>/dev/null
                     )
-                    compgen -d -o nospace -S / -W "$(echo $dirs)" -- "$cur"
+                    compgen -d -S / -W "$dirs" -- "$cur"
                 fi
             )
         )
@@ -354,9 +354,10 @@ function _go_to_dependent_project_completion {
     _go_to_dependent_project_completion_ 0
 }
 
-complete -F _go_to_dependent_project_completion go_to_dependent_project cdp
+complete -o nospace -F _go_to_dependent_project_completion go_to_dependent_project cdp
 
 function _create_new_project_completion_ {
+    local IFS=$'\n'
     local cur extglob
     shopt extglob|grep -q on
     extglob=$?
@@ -368,10 +369,10 @@ function _create_new_project_completion_ {
 
     case $(($COMP_CWORD - $1)) in
         2)
-            COMPREPLY=($(compgen -W "$(_list_types)" -- "$cur"))
+            COMPREPLY=($(compgen -S ' ' -W "$(_list_types)" -- "$cur"))
             ;;
         3)
-            COMPREPLY=($(compgen -d -W "." -- "$cur"))
+            COMPREPLY=($(compgen -d -S / -W "." -- "$cur"))
             ;;
     esac
 
@@ -382,7 +383,7 @@ function _create_new_project_completion_ {
 function _create_new_project_completion {
     _create_new_project_completion_ 0
 }
-complete -F _create_new_project_completion create_new_project np
+complete -o nospace -F _create_new_project_completion create_new_project np
 
 
 #internals for opening a new tab. Used by project_tabbed() below and by the new_tab.sh script
@@ -634,13 +635,14 @@ function p {
 }
 
 function _p_completion {
+    local IFS=$'\n'
     # the possible completion words
     COMPREPLY=()
     # the current word to be completed, can be empty
     cur="${COMP_WORDS[COMP_CWORD]}"
 
     if [ $COMP_CWORD -eq 1 ]; then
-        COMPREPLY=($(compgen -W "go cd new ln link ls list up update tab" -- "$cur"))
+        COMPREPLY=($(compgen -S ' ' -W "go cd new ln link ls list up update tab" -- "$cur"))
     else
         case ${COMP_WORDS[1]} in
         go)          _go_to_project_completion_           1 ;;
@@ -654,7 +656,7 @@ function _p_completion {
     fi
 }
 
-complete -F _p_completion p
+complete -o nospace -F _p_completion p
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
