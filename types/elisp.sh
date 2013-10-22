@@ -136,9 +136,12 @@ EOF
 
 export PATH=\$(
     {
-        $PROJECT/dev/bin/find_path
+        $PROJECT/bin/find_path
         test -d $PROJECT/dep && for dep in $PROJECT/dep/*; do
-            test -d \$dep && \$dep/bin/find_path
+            if [ -h \$dep ]; then
+                project=$PROJECTS_DIR/\${dep#\$PROJECT/dep/}
+                PROJECT=\$project \$project/bin/find_path
+            fi
         done
         echo \$PROJECT_DEFAULT_PATH
     } | awk '{printf("%s:", \$0)}'
