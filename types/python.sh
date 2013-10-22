@@ -241,7 +241,7 @@ export PATH=\$(
 test "\$1" == "-fast" || _project_tag_all $PROJECT
 EOF
 
-    chmod +x $PROJECT/go
+    chmod +x $PROJECT/go $PROJECT/bin/find_path
 }
 
 
