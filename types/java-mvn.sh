@@ -176,12 +176,21 @@ EOF
 
 
 make_go() {
+    cat > $PROJECT/bin/find_path <<EOF
+echo $PROJECT/bin
+if [ -f $PROJECT/dev/.path ]; then
+    cat $PROJECT/dev/.path | awk -vpwd="$(readlink -f $PROJECT/dev)" '/^\// {printf("%s\n", \$0); next} {printf("%s/%s\n", pwd, \$0)}'
+else
+    find -L $PROJECT/dev/ -maxdepth 2 -name tmp -prune -o -type d -name bin -print | sort
+fi
+EOF
+
     cat > $PROJECT/go <<EOF
 
 export PATH=\$({
         echo $PROJECT/bin
         if [ -f $PROJECT/dev/.path ]; then
-            cat $PROJECT/dev/.path | awk -vpwd="$PROJECT" '/^\// {printf("%s\n", \$0); next} {printf("%s/%s\n", pwd, \$0)}'
+            cat $PROJECT/dev/.path | awk -vpwd="$(readlink -f $PROJECT/dev)" '/^\// {printf("%s\n", \$0); next} {printf("%s/%s\n", pwd, \$0)}'
         else
             find -L $PROJECT/dev/ -maxdepth 2 -name tmp -prune -o -type d -name bin -print | sort
         fi

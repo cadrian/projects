@@ -41,6 +41,7 @@ make_emacs() {
 (setq py-load-pymacs-p nil)
 
 (add-to-list 'auto-mode-alist '("\\\\.pycfg\\\\'" . python-mode))
+(add-to-list 'auto-mode-alist '("\\\\.cfg\\\\'" . python-mode))
 
 (require 'mk-project)
 (global-set-key (kbd "C-c p c") 'project-compile)
@@ -216,27 +217,26 @@ EOF
 
 
 make_go() {
+    cat > $PROJECT/bin/find_path <<EOF
+echo $PROJECT/bin
+if [ -f $PROJECT/dev/.path ]; then
+    cat $PROJECT/dev/.path | awk -vpwd="$(readlink -f $PROJECT/dev)" '/^\// {printf("%s\n", \$0); next} {printf("%s/%s\n", pwd, \$0)}'
+else
+    find -L $PROJECT/dev/ -maxdepth 2 -name tmp -prune -o -type d -name bin -print | sort
+fi
+EOF
+
     cat > $PROJECT/go <<EOF
 
 export PATH=\$(
     {
-        echo $PROJECT/bin
-        if [ -f $PROJECT/dev/.path ]; then
-            cat $PROJECT/dev/.path | awk -vpwd="$PROJECT" '/^\// {printf("%s\n", \$0); next} {printf("%s/%s\n", pwd, \$0)}'
-        else
-            find -L $PROJECT/dev/ -maxdepth 2 -name tmp -prune -o -type d -name bin -print | sort
-        fi
-        test -d $PROJECT/dep && find -L $PROJECT/dep -name tmp -prune -o -type d -name bin -print | sort
+        $PROJECT/dev/bin/find_path
+        test -d $PROJECT/dep && for dep in $PROJECT/dep/*; do
+            test -d \$dep && \$dep/bin/find_path
+        done
         echo \$PROJECT_DEFAULT_PATH
     } | awk '{printf("%s:", \$0)}'
 )
-
-#export PYTHONPATH=\$({
-#        $PROJECT_PACK/utils/modules_finder.py \$(find -L $PROJECT/dev/ -name __init__.py -exec dirname {} \; | sort)
-#        test -d $PROJECT/dep && $PROJECT_PACK/utils/modules_finder.py \$(find -L $PROJECT/dep -name __init__.py -exec dirname {} \; | sort) | sort
-#    } | awk '{printf("%s:", \$0)}'
-#    echo
-#)
 
 test "\$1" == "-fast" || _project_tag_all $PROJECT
 EOF
