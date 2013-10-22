@@ -126,7 +126,11 @@ make_go() {
 
 export PATH=\$({
         echo $PROJECT/bin
-        find -L $PROJECT/dev/ -name tmp -prune -o -type d -name bin -print | sort
+        if [ -f $PROJECT/dev/.path ]; then
+            cat $PROJECT/dev/.path | awk -vpwd="$PROJECT" '/^\// {printf("%s\n", \$0); next} {printf("%s/%s\n", pwd, \$0)}'
+        else
+            find -L $PROJECT/dev/ -maxdepth 2 -name tmp -prune -o -type d -name bin -print | sort
+        fi
         test -d $PROJECT/dep && find -L $PROJECT/dep -name tmp -prune -o -type d -name bin -print | sort
     } | awk '{printf("%s:", \$0)}'
     echo \$PROJECT_DEFAULT_PATH

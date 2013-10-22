@@ -38,6 +38,7 @@ make_emacs() {
 (setq load-path (cons "~/.emacs.d/site-lisp/python-mode/"  load-path))
 (setq project-basedir "$PROJECT_DEVDIR")
 (setenv "PYMACS_PYTHON" "python2.6")
+(setq py-load-pymacs-p nil)
 
 (add-to-list 'auto-mode-alist '("\\\\.pycfg\\\\'" . python-mode))
 
@@ -132,6 +133,8 @@ make_emacs() {
 (setq ropemacs-enable-shortcuts nil)
 (setq ropemacs-local-prefix "C-c C-p")
 
+;;(require 'pymacs)
+;;(pymacs-load "ropemacs" "rope-")
 (require 'python-mode)
 (autoload 'pymacs-apply "pymacs")
 (autoload 'pymacs-call "pymacs")
@@ -215,12 +218,17 @@ EOF
 make_go() {
     cat > $PROJECT/go <<EOF
 
-export PATH=\$({
+export PATH=\$(
+    {
         echo $PROJECT/bin
-        find -L $PROJECT/dev/ -name tmp -prune -o -type d -name bin -print | sort
+        if [ -f $PROJECT/dev/.path ]; then
+            cat $PROJECT/dev/.path | awk -vpwd="$PROJECT" '/^\// {printf("%s\n", \$0); next} {printf("%s/%s\n", pwd, \$0)}'
+        else
+            find -L $PROJECT/dev/ -maxdepth 2 -name tmp -prune -o -type d -name bin -print | sort
+        fi
         test -d $PROJECT/dep && find -L $PROJECT/dep -name tmp -prune -o -type d -name bin -print | sort
+        echo \$PROJECT_DEFAULT_PATH
     } | awk '{printf("%s:", \$0)}'
-    echo \$PROJECT_DEFAULT_PATH
 )
 
 #export PYTHONPATH=\$({
