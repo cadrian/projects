@@ -84,16 +84,15 @@ export PROJECT_DEVDIR=\$(readlink \$PROJECT/dev)
 test x\$1 == x-a || rm -f \$LOG
 touch \$LOG
 echo "\$(date -R) - updating $PROJECT for \$PROJECT" >>\$LOG
-find \$PROJECT_DEVDIR -name tmp -prune -o -name \\*.[ch]   -print | etags \$@ -f \$TAGS --language-force=C --fields=+ailmnSz -L- 2>>\$LOG|| echo "Brand new project: no file tagged."
-find \$PROJECT_DEVDIR -name tmp -prune -o -name \\*.[ch]pp -print | etags -a \$@ -f \$TAGS --language-force='C++' --fields=+ailmnSz -L- 2>>\$LOG|| echo "Brand new project: no file tagged."
+find \$PROJECT_DEVDIR -name tmp -prune -o -name \\*.[ch]   -print | parallel --pipe etags \$@ -f \$TAGS --language-force=C --fields=+ailmnSz -L- 2>>\$LOG|| echo "Brand new project: no file tagged."
+find \$PROJECT_DEVDIR -name tmp -prune -o -name \\*.[ch]pp -print | parallel --pipe etags -a \$@ -f \$TAGS --language-force='C++' --fields=+ailmnSz -L- 2>>\$LOG|| echo "Brand new project: no file tagged."
 
 if [ -d \$PROJECT/dep ]; then
     for dep in \$(echo \$PROJECT/dep/*); do
         if [ -h \$dep ]; then
-            project=$PROJECTS_DIR/\${dep#\$PROJECT/dep/}
-            PROJECT=\$project \$project/bin/tag_all.sh -a \$@
+            echo $PROJECTS_DIR/\${dep#\$PROJECT/dep/}
         fi
-    done
+    done | parallel "export PROJECT={}; \$PROJECT/bin/tag_all.sh -a \$@"
 fi
 EOF
 
@@ -109,10 +108,9 @@ find \$PROJECT_DEVDIR -name tmp -prune -o -name \\*.[ch]pp -print 2>/dev/null
 if [ -d \$PROJECT/dep ]; then
     for dep in \$(echo \$PROJECT/dep/*); do
         if [ -h \$dep ]; then
-            project=$PROJECTS_DIR/\${dep#\$PROJECT/dep/}
-            PROJECT=\$project \$project/bin/find_all.sh -a \$@
+            echo $PROJECTS_DIR/\${dep#\$PROJECT/dep/}
         fi
-    done
+    done | parallel "export PROJECT={}; \$PROJECT/bin/find_all.sh -a \$@"
 fi
 EOF
 
