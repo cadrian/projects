@@ -132,9 +132,11 @@ function go_to_dependent_project {
     fi
 
     PROJECT=$PROJECTS_DIR/$CURRENT_PROJECT
+    opwd=$(pwd)
     cd $(readlink $PROJECT/$dep)
     test -x $PROJECTS_DIR/$proj/godep && . $PROJECTS_DIR/$proj/godep
     cd "$dir"
+    OLDPWD="$opwd"
 }
 
 
