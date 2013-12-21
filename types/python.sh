@@ -181,14 +181,14 @@ export PROJECT_DEVDIR=\$(readlink \$PROJECT/dev)
 test x\$1 == x-a || rm -f \$LOG
 touch \$LOG
 echo "\$(date -R) - updating $PROJECT" >>\$LOG
-find \$PROJECT_DEVDIR -name tmp -prune -o -name \\*_flymake.py -false -o -name \\*.py -print | parallel --pipe etags \$@ -f \$TAGS --language-force=python --python-kinds=cfm -L- 2>>\$LOG || echo "Brand new project: no file tagged."
+find \$PROJECT_DEVDIR -name tmp -prune -o -name \\*_flymake.py -false -o -name \\*.py -print | parallel --gnu --pipe etags \$@ -f \$TAGS --language-force=python --python-kinds=cfm -L- 2>>\$LOG || echo "Brand new project: no file tagged."
 
 if [ -d \$PROJECT/dep ]; then
     for dep in \$PROJECT/dep/*; do
         if [ -h \$dep ]; then
             echo $PROJECTS_DIR/\${dep#\$PROJECT/dep/}
         fi
-    done | parallel "export PROJECT={}; \$PROJECT/bin/tag_all.sh -a \$@"
+    done | parallel --gnu "export PROJECT={}; {}/bin/tag_all.sh -a \$@"
 fi
 EOF
 
@@ -205,7 +205,7 @@ if [ -d \$PROJECT/dep ]; then
         if [ -h \$dep ]; then
             echo $PROJECTS_DIR/\${dep#\$PROJECT/dep/}
         fi
-    done | parallel "export PROJECT={}; \$PROJECT/bin/find_all.sh -a \$@"
+    done | parallel --gnu "export PROJECT={}; {}/bin/find_all.sh -a \$@"
 fi
 EOF
 
