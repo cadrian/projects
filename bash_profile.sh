@@ -668,6 +668,7 @@ function _project_tag_all {
     project=$1
     nb=$($project/bin/find_all.sh | wc -l)
     cols=$(stty size|awk '{print $2}')
+    rm -f ${TAGS:-$PROJECT/.mk/TAGS}
     $project/bin/tag_all.sh -V | grep '^OPENING' | awk -vcols=$cols -vsize=30 -vmax=$nb '
        BEGIN {
           len = cols - size - 6;
