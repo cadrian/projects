@@ -86,6 +86,7 @@ touch \$LOG
 echo "\$(date -R) - updating $PROJECT for \$PROJECT" >>\$LOG
 find \$PROJECT_DEVDIR -name tmp -prune -o -name \\*.[ch]   -print | parallel --gnu --pipe etags \$@ -f\$TAGS- --language-force=C --fields=+ailmnSz -L- 2>>\$LOG|| echo "Brand new project: no file tagged."
 find \$PROJECT_DEVDIR -name tmp -prune -o -name \\*.[ch]pp -print | parallel --gnu --pipe etags \$@ -a -f\$TAGS --language-force='C++' --fields=+ailmnSz -L- 2>>\$LOG|| echo "Brand new project: no file tagged."
+cat \$TAGS- >> \$TAGS; rm \$TAGS-
 
 if [ -d \$PROJECT/dep ]; then
     for dep in \$(echo \$PROJECT/dep/*); do
@@ -93,10 +94,12 @@ if [ -d \$PROJECT/dep ]; then
             echo $PROJECTS_DIR/\${dep#\$PROJECT/dep/}
         fi
     done | parallel --gnu "TAGS=\$PROJECT/.mk/dep_TAGS_{#} PROJECT={} {}/bin/tag_all.sh \$@"
-    if [ -e \$PROJECT/.mk/dep_TAGS_1 ]; then
-        cat \$PROJECT/.mk/dep_TAGS_* >> \$TAGS
-        rm -f \$PROJECT/.mk/dep_TAGS_*
-    fi
+    for tags in \$PROJECT/.mk/dep_TAGS_*; do
+        if [ -e \$tags ]; then
+            cat \$tags >> \$TAGS
+            rm -f \$tags
+        fi
+    done
 fi
 EOF
 
