@@ -34,7 +34,18 @@ CACHE=${XDG_CACHE_HOME:-"$HOME/.cache"}/zenity_project
     fi
 )
 
-if project=$(yad --width 300 --height 400 --list --title "Open a project" --column "Project" --search-column=1 --regex-search --no-headers --separator="" < "$CACHE"); then
+ask() {
+    if [[ -x $(which yad 2>/dev/null) ]]; then
+        yad --width 300 --height 400 --list --title="Open a project" --column="Project" --search-column=1 --regex-search --no-headers --separator="" < "$CACHE"
+    elif [[ -x $(which zenity 2>/dev/null) ]]; then
+        zenity --width 300 --height 400 --list --title="Open a project" --column="Project" --separator="" < "$CACHE"
+    else
+        echo "No yad nor zenity found" >&2
+        exit 1
+    fi
+}
+
+if project=$(ask); then
     if [ x"$project" != x ]; then
         PROFILE=$PROJECTS_DIR/$project/.zenity_profile
         cat > $PROFILE <<EOF
