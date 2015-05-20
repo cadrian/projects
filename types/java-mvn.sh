@@ -31,39 +31,42 @@ make_emacs() {
     test -h $PROJECT/bin/emacs && rm $PROJECT/bin/emacs
     EMACS=$(which emacs-snapshot || which emacs)
     test -e $PROJECT/bin/emacs || ln -s $EMACS $PROJECT/bin/emacs
-    test -e $PROJECT/bin/etags || ln -s /usr/bin/ctags-exuberant $PROJECT/bin/etags
+    test -e $PROJECT/bin/etags || {
+        if [[ -x /usr/bin/ctags-exuberant ]]; then
+            ln -sf /usr/bin/ctags-exuberant $PROJECT/bin/etags
+        elif [[ -x /usr/bin/etags ]]; then
+            ln -sf /usr/bin/etags $PROJECT/bin/etags
+        fi
+    }
 
-    MALABAR=$HOME/.emacs.d/malabar-1.4.0
-    PMD=$HOME/.emacs.d/pmd-4.2.5
     JAVA=$(which java)
 
     cat > $PROJECT/project.el <<EOF
 (add-to-list 'load-path "$PROJECT_PACK/site-lisp")
 (add-to-list 'load-path "$PROJECT_PACK/site-lisp/mk-project")
-(add-to-list 'load-path "$MALABAR/lisp")
 (setq project-basedir "$PROJECT_DEVDIR")
 
-(require 'pmd)
-(setq pmd-java-home "$JAVA")
-(setq pmd-home "$PMD")
-(setq pmd-ruleset-list (list "basic" "braces" "clone" "codesize" "coupling" "design" "finalizers" "imports" "junit" "naming" "optimizations" "strings" "unusedcode"))
-(global-set-key (kbd "M-g x") 'pmd-current-buffer)
+;;(require 'package)
+;;(setq package-enable-at-startup nil)
+;;(package-initialize t)
 
-(setq semantic-default-submodes '(global-semantic-idle-scheduler-mode
-                                  global-semanticdb-minor-mode
-                                  global-semantic-idle-summary-mode
-                                  global-semantic-mru-bookmark-mode))
+(defun update-java-packages ()
+  "Update packages used by Java modes"
+  (interactive)
+  (require 'package)
+  (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
+  (package-refresh-contents)
+  (package-install 'auto-complete)
+  (package-install 'malabar-mode)
+  (package-install 'flycheck)
+  (package-install 'ecb)
+  (message "Java modes are now up-to-date."))
 
-(require 'malabar-mode)
-(setq malabar-groovy-lib-dir "$MALABAR/lib")
-(add-hook 'malabar-mode-hook
+(add-hook 'after-init-hook
   (lambda ()
-    (add-hook 'after-save-hook
-              (lambda ()
-                (malabar-compile-file-silently)
-                (pmd-current-buffer))
-              nil t)))
-(add-to-list 'auto-mode-alist '("\\\\.java\\\\'" . malabar-mode))
+    (load "mk-java.el")
+    (setq malabar-mode-config-classpath-file "$PROJECT/malabar-mode.classpath")
+    (load "fix-java.el")))
 
 (require 'mk-project)
 (global-set-key (kbd "C-c p c") 'project-compile)
@@ -105,27 +108,21 @@ make_emacs() {
 (add-hook 'c-mode-hook
   (lambda ()
     (hs-minor-mode)
-    (c-subword-mode t)
+    (subword-mode)
     (setq tab-width 4)))
 
 (add-hook 'java-mode-hook
   (lambda ()
     (hs-minor-mode)
-    (c-subword-mode t)
-    (setq tab-width 4)
-    (semantic-mode t)))
-
-(add-hook 'kill-emacs-hook
-  (lambda ()
-    (if (malabar-groovy-live-p)
-        (malabar-groovy-stop))))
-
-(load "fix-java.el")
+    (subword-mode)
+    (setq tab-width 4)))
 
 (set-frame-name "Emacs: $PROJECT_NAME")
 (project-load "$PROJECT_NAME-project")
 (project-dired)
 EOF
+
+touch $PROJECT/malabar-mode.classpath
 }
 
 

@@ -31,7 +31,10 @@ make_emacs() {
     test -h $PROJECT/bin/emacs && rm $PROJECT/bin/emacs
     EMACS=$(which emacs-snapshot || which emacs)
     test -e $PROJECT/bin/emacs || ln -s $EMACS $PROJECT/bin/emacs
-    test -e $PROJECT/bin/etags || ln -s /usr/bin/ctags-exuberant $PROJECT/bin/etags
+    test -e $PROJECT/bin/etags || {
+        test -x /usr/bin/ctags-exuberant && ln -sf /usr/bin/ctags-exuberant $PROJECT/bin/etags
+        test -x /usr/bin/etags && ln -sf /usr/bin/etags $PROJECT/bin/etags
+    }
 
     cat > $PROJECT/project.el <<EOF
 (setq load-path (cons "$PROJECT_PACK/site-lisp" (cons "$PROJECT_PACK/site-lisp/mk-project" load-path)))
@@ -93,15 +96,21 @@ export LOG=\${LOG:-\$PROJECT/.mk/tag_log}
 export PROJECT_DEVDIR=\$(readlink \$PROJECT/dev)
 test x\$1 == x-a || rm -f \$LOG
 touch \$LOG
-echo "\$(date -R) - updating $PROJECT - tag file: \$TAGS" >>\$LOG
-find -O3 \$PROJECT_DEVDIR \( -name test -o -name tmp -o -name debian \) -prune -o -name \\*.e -print | parallel --gnu --pipe --keep-order etags \$@ -f \$TAGS --language-force=Eiffel --extra=+f --fields=+ailmnSz -L- 2>>\$LOG|| echo "Brand new project: no file tagged."
+echo "\$(date -R) - updating \$PROJECT (in \$PROJECT_DEVDIR) - tag file: \$TAGS" >>\$LOG
+rm -f \$TAGS
+touch \$TAGS
+find -O3 \$PROJECT_DEVDIR \( -name test -o -name tmp -o -name debian \) -prune -o -name \\*.e -printf "%p\n" | \\
+    #parallel --gnu --keep-order --pipe --recend "\n" --block 4M
+    xargs etags -a -f \$TAGS --language-force=Eiffel --extra=+f --fields=+ailmnSz -L- 2>>\$LOG || \\
+    echo "Brand new project: no file tagged."
 
 if [ -d \$PROJECT/dep ]; then
     for dep in \$(echo \$PROJECT/dep/*); do
         if [ -h \$dep ]; then
             echo $PROJECTS_DIR/\${dep#\$PROJECT/dep/}
+            echo $PROJECTS_DIR/\${dep#\$PROJECT/dep/} >>\$LOG
         fi
-    done | parallel --gnu "TAGS=\$PROJECT/.mk/dep_TAGS_{#} PROJECT={} {}/bin/tag_all.sh \$@"
+    done | parallel --gnu "TAGS=\$PROJECT/.mk/dep_TAGS_{#} PROJECT={} {}/bin/tag_all.sh -a"
     if [ -e \$PROJECT/.mk/dep_TAGS_1 ]; then
         cat \$PROJECT/.mk/dep_TAGS_* >> \$TAGS
         rm -f \$PROJECT/.mk/dep_TAGS_*
@@ -122,7 +131,7 @@ if [ -d \$PROJECT/dep ]; then
         if [ -h \$dep ]; then
             echo $PROJECTS_DIR/\${dep#\$PROJECT/dep/}
         fi
-    done | parallel --gnu "PROJECT={} {}/bin/find_all.sh -a \$@"
+    done | parallel --gnu "PROJECT={} {}/bin/find_all.sh -a"
 fi
 EOF
 
