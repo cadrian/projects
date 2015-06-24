@@ -86,7 +86,7 @@ touch \$LOG
 echo "\$(date -R) - updating $PROJECT for \$PROJECT" >>\$LOG
 find \$PROJECT_DEVDIR -name tmp -prune -o -name \\*.[ch]   -print | parallel --gnu --pipe etags \$@ -f\$TAGS- --language-force=C --fields=+ailmnSz -L- 2>>\$LOG|| echo "Brand new project: no file tagged."
 find \$PROJECT_DEVDIR -name tmp -prune -o -name \\*.[ch]pp -print | parallel --gnu --pipe etags \$@ -a -f\$TAGS --language-force='C++' --fields=+ailmnSz -L- 2>>\$LOG|| echo "Brand new project: no file tagged."
-cat \$TAGS- >> \$TAGS; rm \$TAGS-
+test -e \$TAGS- && { cat \$TAGS- >> \$TAGS; rm \$TAGS-; }
 
 if [ -d \$PROJECT/dep ]; then
     for dep in \$(echo \$PROJECT/dep/*); do
