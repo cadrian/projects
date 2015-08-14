@@ -32,8 +32,11 @@ make_emacs() {
     EMACS=$(which emacs-snapshot || which emacs)
     test -e $PROJECT/bin/emacs || ln -s $EMACS $PROJECT/bin/emacs
     test -e $PROJECT/bin/etags || {
-        test -x /usr/bin/ctags-exuberant && ln -sf /usr/bin/ctags-exuberant $PROJECT/bin/etags
-        test -x /usr/bin/etags && ln -sf /usr/bin/etags $PROJECT/bin/etags
+        if test -x /usr/bin/ctags-exuberant; then
+            ln -sf /usr/bin/ctags-exuberant $PROJECT/bin/etags
+        elif test -x /usr/bin/etags; then
+            ln -sf /usr/bin/etags $PROJECT/bin/etags
+        fi
     }
 
     cat > $PROJECT/project.el <<EOF
