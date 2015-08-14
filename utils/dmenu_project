@@ -42,6 +42,8 @@ export PROJECT_PACK=$pack
 
 if [ -e \$HOME/.bash_profile ]; then
     . \$HOME/.bash_profile
+elif [ -e \$HOME/.profile ]; then
+    . \$HOME/.profile
 elif [ -e $HOME/.bashrc ]; then
     . \$HOME/.bashrc
 fi
@@ -49,7 +51,7 @@ fi
 
 _ssh_agent_check
 go_to_project $project
-echo "DISPLAY=$DISPLAY emacs -g 132x50" | at now 2>/dev/null
+echo "DISPLAY=$DISPLAY emacs --maximized" | at now 2>/dev/null & disown
 
 EOF
 
