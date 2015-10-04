@@ -59,18 +59,19 @@ elif [ -e \$HOME/.profile ]; then
 elif [ -e $HOME/.bashrc ]; then
     . \$HOME/.bashrc
 fi
-. \$PROJECT_PACK/bash_profile.sh
-
+if [ "\${PROJECT_CURRENT:-unknown}" = unknown ]; then
+    . \$PROJECT_PACK/bash_profile.sh
+fi
 _ssh_agent_check
 go_to_project $project
-echo "DISPLAY=$DISPLAY emacs --maximized" | at now 2>/dev/null & disown
+emacs --maximized & disown
 
 EOF
 
         if [[ -x $(which gnome-terminal 2>/dev/null) ]]; then
-            exec gnome-terminal --geometry=132x50 --title="Project: $project" --hide-menubar --command="bash --init-file $PROFILE"
+            exec gnome-terminal --geometry=132x50 --hide-menubar --command="bash --init-file $PROFILE"
         elif [[ -x $(which xterm 2>/dev/null) ]]; then
-            exec xterm +bc +cm -cr white -cu -en 'utf-8' -fa Inconsolata -fs 10 -j -ms white -rightbar +tb -rw -s -sb -si -sk -sl 4294967296 -sm -u8 -vb -wc +wf -w 4 -bd '#3f3f3f' -bg '#3f3f3f' -fg ivory -geometry 132x50 -title "Project: $project" -n "Project: $project" -e bash --init-file $PROFILE
+            exec xterm +bc +cm -cr white -cu -en 'utf-8' -fa Inconsolata -fs 10 -j -ms white -rightbar +tb -rw -s -sb -si -sk -sl 4294967296 -sm -u8 -vb -wc +wf -w 4 -bd '#3f3f3f' -bg '#3f3f3f' -fg ivory -geometry 132x50 -n "Project: $project" -e bash --init-file $PROFILE
         else
             echo "No gnome-terminal nor xterm found" >&2
             exit 1
