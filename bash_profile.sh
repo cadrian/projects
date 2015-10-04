@@ -703,15 +703,17 @@ function _ssh_agent_check {
     if [ -r $ssh_agent_info ]; then
         . $ssh_agent_info
     fi
-    if [ $(tty) != "not a tty" ]; then
-        ssh-add -l | egrep -q '/id_rsa$' 2>/dev/null || ssh-add
+    if ssh-add -l | awk '$3 == "'$HOME/.ssh/id_rsa'" {exit 0} {exit 1}'; then
+        :
     elif [ -x /usr/lib/openssh/gnome-ssh-askpass ]; then
-        ssh-add -l | egrep -q '/id_rsa$' 2>/dev/null || (
+        (
             export SSH_ASKPASS=/usr/lib/openssh/gnome-ssh-askpass
             exec ssh-add </dev/null
         )
+    elif [ $(tty) != "not a tty" ]; then
+        ssh-add
     else
-        ssh-add -l | egrep -q '/id_rsa$' 2>/dev/null || xterm -g 80x5 -T ssh-add -e ssh-add
+        xterm -g 80x5 -T ssh-add -e ssh-add
     fi
 }
 

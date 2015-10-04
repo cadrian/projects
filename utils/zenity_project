@@ -64,7 +64,10 @@ if [ "\${PROJECT_CURRENT:-unknown}" = unknown ]; then
 fi
 _ssh_agent_check
 go_to_project $project
-emacs --maximized & disown
+at now -f <(
+env | awk -F= '{v=\$1; sub(\$1 FS, ""); printf("%s=\\"%s\\"\\nexport %s\\n", v, \$0, v)}'
+echo "exec emacs --maximized"
+) >/dev/null 2>&1 & disown
 
 EOF
 

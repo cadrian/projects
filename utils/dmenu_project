@@ -35,7 +35,7 @@ CACHE=${XDG_CACHE_HOME:-"$HOME/.cache"}/dmenu_project
 )
 if project=$(dmenu -b -i -p 'Project:' -fn fixed -nb '#3f3f3f' -nf ivory -sb '#285577' -sf white < "$CACHE"); then
     PROFILE=$PROJECTS_DIR/$project/.dmenu_profile
-    test -e $PROFILE || cat > $PROFILE <<EOF
+    cat > $PROFILE <<EOF
 set -p
 
 export PROJECT_PACK=$pack
@@ -52,7 +52,10 @@ if [ "\${PROJECT_CURRENT:-unknown}" = unknown ]; then
 fi
 _ssh_agent_check
 go_to_project $project
-emacs --maximized & disown
+at now -f <(
+env | awk -F= '{v=\$1; sub(\$1 FS, ""); printf("%s=\\"%s\\"\\nexport %s\\n", v, \$0, v)}'
+echo "exec emacs --maximized"
+) >/dev/null 2>&1 & disown
 
 EOF
 
