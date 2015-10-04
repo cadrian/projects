@@ -697,24 +697,35 @@ function _project_tag_all {
        }'
 }
 
-ssh_agent_info=${TMPDIR:-/tmp}/ssh_agent_$USER
-ssh_agent_flag=${TMPDIR:-/tmp}/ssh_agent_$USER.flag
+ssh_agent_info=${TMPDIR:-/tmp}/ssh_agent_$USER.info
 
 function _ssh_agent_check {
-    if [ $(tty) != "not a tty" -a -r $ssh_agent_info ]; then
+    if [ -r $ssh_agent_info ]; then
         . $ssh_agent_info
-        if [ \! -r $ssh_agent_flag ]; then
-            ssh-add
-            touch $ssh_agent_flag
-        fi
+    fi
+    if [ $(tty) != "not a tty" ]; then
+        ssh-add -l | egrep -q '/id_rsa$' 2>/dev/null || ssh-add
+    elif [ -x /usr/lib/openssh/gnome-ssh-askpass ]; then
+        ssh-add -l | egrep -q '/id_rsa$' 2>/dev/null || (
+            export SSH_ASKPASS=/usr/lib/openssh/gnome-ssh-askpass
+            exec ssh-add </dev/null
+        )
+    else
+        ssh-add -l | egrep -q '/id_rsa$' 2>/dev/null || xterm -g 80x5 -T ssh-add -e ssh-add
     fi
 }
 
 function ssh_agent_start {
     if [ \! -r $ssh_agent_info ]; then
-        at now 2>/dev/null <<EOF
-rm -f $ssh_agent_flag
-ssh-agent > $ssh_agent_info
-EOF
+        (
+            exec ssh-agent > $ssh_agent_info
+        ) & disown
+        if which inotifywait >/dev/null 2>&1; then
+            while [ ! -f "$ssh_agent_info" ]; do
+                inotifywait -qqt 1 -e create -e moved_to "$(dirname $ssh_agent_info)"
+            done
+        else
+            sleep 2
+        fi
     fi
 }
