@@ -146,6 +146,7 @@ export PATH=\$(
 )
 
 test "\$1" == "-fast" || _project_tag_all $PROJECT
+test -x $PROJECT/bin/go_hook && . $PROJECT/bin/go_hook
 EOF
 
     chmod +x $PROJECT/go $PROJECT/bin/find_path
