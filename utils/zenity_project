@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (c) 2010-2013, Cyril Adrian <cyril.adrian@gmail.com> All rights reserved.
+# Copyright (c) 2010-2016, Cyril Adrian <cyril.adrian@gmail.com> All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without modification, are permitted provided that
 # the following conditions are met:
@@ -64,10 +64,7 @@ if [ "\${PROJECT_CURRENT:-unknown}" = unknown ]; then
 fi
 _ssh_agent_check
 go_to_project $project
-at now -f <(
-env | awk -F= '{v=\$1; sub(\$1 FS, ""); printf("%s=\\"%s\\"\\nexport %s\\n", v, \$0, v)}'
-echo "exec emacs --maximized"
-) >/dev/null 2>&1 & disown
+at now -f <($pack/utils/run_emacs.sh) >/dev/null 2>&1 & disown
 
 EOF
 
