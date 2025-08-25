@@ -210,7 +210,7 @@ update_project() {
 
     echo "Please wait, updating project $CURRENT_PROJECT."
 
-    type=$(< "$PROJECT"/type)
+    local type=$(< "$PROJECT"/type)
     PROJECT_FACTORY=$PROJECT_PACK/types/$type.sh
 
     if [[ -n "$1" ]]; then
@@ -221,7 +221,11 @@ update_project() {
         PROJECT_DEVDIR=$(readlink "$PROJECT"/dev)
     fi
 
-    rm -f "$PROJECT"/.dmenu_profile "$PROJECT"/.zenity_profile
+    rm -rf "$PROJECT"
+
+    mkdir -p "$PROJECT" "$PROJECT/bin"
+    ln -s "$PROJECT_DEVDIR" "$PROJECT"/dev
+    echo "$type" > "$PROJECT"/type
 
     "$PROJECT_FACTORY" "$CURRENT_PROJECT" "$PROJECT_DEVDIR"
 }

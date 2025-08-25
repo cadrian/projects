@@ -22,4 +22,4 @@
 
 env | awk -F= '{v=$1; sub($1 FS, ""); printf("%s=\"%s\"\nexport %s\n", v, $0, v)}'
 echo "cd \"$(pwd)\""
-echo "exec emacs --maximized"
+echo "exec emacs --maximized --load=\"$PROJECT_PACK\"/site-lisp/init.el"

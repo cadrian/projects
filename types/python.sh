@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2010-2013, Cyril Adrian <cyril.adrian@gmail.com> All rights reserved.
+# Copyright (c) 2010-2025, Cyril Adrian <cyril.adrian@gmail.com> All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without modification, are permitted provided that
 # the following conditions are met:
@@ -20,238 +20,57 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-PROJECT_NAME=$1
-PROJECT=$PROJECTS_DIR/$1
-PROJECT_DEVDIR=$2
-
-. $PROJECT_PACK/bash_profile.sh
-
-
-make_emacs() {
-    test -h $PROJECT/bin/emacs && rm $PROJECT/bin/emacs
-    EMACS=$(which emacs-snapshot || which emacs)
-    test -e $PROJECT/bin/emacs || ln -s $EMACS $PROJECT/bin/emacs
-    test -e $PROJECT/bin/etags || ln -s /usr/bin/ctags-exuberant $PROJECT/bin/etags
-
-    cat > $PROJECT/project.el <<EOF
-(setq load-path (cons "$PROJECT_PACK/site-lisp" (cons "$PROJECT_PACK/site-lisp/mk-project" load-path)))
-(setq load-path (cons "~/.emacs.d/site-lisp/python-mode/"  load-path))
-(setq project-basedir "$PROJECT_DEVDIR")
-(setenv "PYMACS_PYTHON" "python2.6")
-(setq py-load-pymacs-p nil)
-
-(add-to-list 'auto-mode-alist '("\\\\.pycfg\\\\'" . python-mode))
-(add-to-list 'auto-mode-alist '("\\\\.cfg\\\\'" . python-mode))
-
-(require 'mk-project)
-(global-set-key (kbd "C-c p c") 'project-compile)
-(global-set-key (kbd "C-c p l") 'project-load)
-(global-set-key (kbd "C-c p a") 'project-ack)
-(global-set-key (kbd "C-c p g") 'project-grep)
-(global-set-key (kbd "C-c p o") 'project-multi-occur)
-(global-set-key (kbd "C-c p u") 'project-unload)
-(global-set-key (kbd "C-c p f") 'project-find-file) ; or project-find-file-ido
-(global-set-key (kbd "C-c p i") 'project-index)
-(global-set-key (kbd "C-c p s") 'project-status)
-(global-set-key (kbd "C-c p h") 'project-home)
-(global-set-key (kbd "C-c p d") 'project-dired)
-(global-set-key (kbd "C-c p t") 'project-tags)
-
-(defun my-python-gather-names (indent)
-  (if (py-beginning-of-def-or-class)
-      (if (>= (current-indentation) indent)
-          (progn
-            (my-python-gather-names indent))
-
-          (let ((name (save-excursion
-                        (forward-word)
-                        (forward-whitespace 1)
-                        (word-at-point))))
-            (let ((parent-name (my-python-gather-names (current-indentation))))
-              (if parent-name
-                  (concat parent-name "." name)
-                name))))
-    nil))
-
-(defun my-python-def ()
-  (save-excursion
-    (if (py-beginning-of-def-or-class)
-        (progn
-          (forward-word)
-          (let ((py-module (py-qualified-module-name buffer-file-name)))
-            (let ((py-names (my-python-gather-names (1+ (current-indentation)))))
-              (concat py-module "." py-names)))))))
-
-(defun my-python-unittest-def ()
-  (save-excursion
-    (if (py-beginning-of-def-or-class)
-        (progn
-          (forward-word)
-            (let ((py-names (my-python-gather-names (1+ (current-indentation)))))
-              (concat buffer-file-name " " py-names))))))
-
-(defun my-copy-to-clipboard (text)
-  (interactive)
-    (deactivate-mark)
-    (x-set-selection 'PRIMARY text)
-    (x-set-selection 'CLIPBOARD text)
-    (message "%s" text))
-
-(defun my-python-filename-to-clipboard ()
-  (interactive)
-  (my-copy-to-clipboard buffer-file-name))
-
-(defun my-python-def-to-clipboard ()
-  (interactive)
-  (let ((text (my-python-def)))
-    (if text
-        (my-copy-to-clipboard text)
-      (message "no def or class found"))))
-
-(defun my-python-unittest-def-to-clipboard ()
-  (interactive)
-  (let ((text (my-python-unittest-def)))
-    (if text
-        (my-copy-to-clipboard text)
-      (message "no def or class found"))))
-
-(global-set-key (kbd "C-c p y f") 'my-python-filename-to-clipboard)
-(global-set-key (kbd "C-c p y x") 'my-python-def-to-clipboard)
-(global-set-key (kbd "C-c p y d") 'my-python-unittest-def-to-clipboard)
-
-(project-def "$PROJECT_NAME-project"
-      '((basedir          "$PROJECT_DEVDIR")
-        (src-patterns     ("*.py" "*.pycfg"))
-        (ignore-patterns  ("*.pyc"))
-        (tags-file        "$PROJECT/.mk/TAGS")
-        (file-list-cache  "$PROJECT/.mk/files")
-        (open-files-cache "$PROJECT/.mk/open-files")
-        (vcs              git)
-        (compile-cmd      nil)
-        (startup-hook     $PROJECT_NAME-project-startup)
-        (shutdown-hook    nil)))
-
-(setq ropemacs-enable-shortcuts nil)
-(setq ropemacs-local-prefix "C-c C-p")
-
-;;(require 'pymacs)
-;;(pymacs-load "ropemacs" "rope-")
-(require 'python-mode)
-(autoload 'pymacs-apply "pymacs")
-(autoload 'pymacs-call "pymacs")
-(autoload 'pymacs-eval "pymacs" nil t)
-(autoload 'pymacs-exec "pymacs" nil t)
-(autoload 'pymacs-load "pymacs" nil t)
-
-(setq whitespace-line-column 140)
-
-(defun $PROJECT_NAME-project-startup ()
-  nil)
-
-;; (require 'flymake)
-;;
-;; ;(load-library "flymake-cursor")
-;; (defun $PROJECT_NAME-flymake-pycodecheck-init ()
-;;   (let* ((temp-file (flymake-init-create-temp-buffer-copy
-;;                      'flymake-create-temp-inplace))
-;;          (local-file (file-relative-name
-;;                       temp-file
-;;                       (file-name-directory buffer-file-name))))
-;;     (list "$PROJECT_PACK/types/rc/pylint_etc_wrapper.py" (list local-file))))
-;; (add-to-list 'flymake-allowed-file-name-masks
-;;              '("\\\\.py\\\\'" $PROJECT_NAME-flymake-pycodecheck-init))
-;;
-;; (add-hook 'find-file-hook 'flymake-find-file-hook)
-
-(set-frame-name "Emacs: $PROJECT_NAME")
-(project-load "$PROJECT_NAME-project")
-(project-dired)
-EOF
-}
-
+. "$PROJECT_PACK"/bash_profile.sh
+. "$PROJECT_PACK"/types/_common.sh "$@"
 
 make_tags() {
-    cat > $PROJECT/bin/tag_all.sh <<EOF
+    cat > "$PROJECT"/bin/tag_all.sh <<EOF
 #!/usr/bin/env bash
 
-export PROJECT=\${PROJECT:-$PROJECT}
-export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
-export LOG=\${LOG:-\$PROJECT/.mk/tag_log}
-export PROJECT_DEVDIR=\$(readlink \$PROJECT/dev)
+export PROJECT=\${PROJECT:-"$PROJECT"}
+export TAGS=\${TAGS:-\"$PROJECT"/.mk/TAGS}
+export LOG=\${LOG:-\"$PROJECT"/.mk/tag_log}
+export PROJECT_DEVDIR=\$(readlink \"$PROJECT"/dev)
 test x\$1 == x-a || rm -f \$LOG
 touch \$LOG
-echo "\$(date -R) - updating $PROJECT" >>\$LOG
-find \$PROJECT_DEVDIR -name tmp -prune -o -name \\*_flymake.py -false -o -name \\*.py -print | parallel --gnu --pipe etags \$@ -f\$TAGS --language-force=python --python-kinds=cfm -L- 2>>\$LOG || echo "Brand new project: no file tagged."
+echo "\$(date -R) - updating "$PROJECT"" >>\$LOG
+find \"$PROJECT"_DEVDIR -name tmp -prune -o -name \\*_flymake.py -false -o -name \\*.py -print | parallel --gnu --pipe etags \$@ -f\$TAGS --language-force=python --python-kinds=cfm -L- 2>>\$LOG || echo "Brand new project: no file tagged."
 
-if [ -d \$PROJECT/dep ]; then
-    for dep in \$PROJECT/dep/*; do
+if [ -d \"$PROJECT"/dep ]; then
+    for dep in \"$PROJECT"/dep/*; do
         if [ -h \$dep ]; then
-            echo $PROJECTS_DIR/\${dep#\$PROJECT/dep/}
+            echo "$PROJECT"S_DIR/\${dep#\"$PROJECT"/dep/}
         fi
-    done | parallel --gnu "TAGS=\$PROJECT/.mk/dep_TAGS_{#} PROJECT={} {}/bin/tag_all.sh \$@"
-    if [ -e \$PROJECT/.mk/dep_TAGS_1 ]; then
-        cat \$PROJECT/.mk/dep_TAGS_* >> \$TAGS
-        rm -f \$PROJECT/.mk/dep_TAGS_*
+    done | parallel --gnu "TAGS=\"$PROJECT"/.mk/dep_TAGS_{#} PROJECT={} {}/bin/tag_all.sh \$@"
+    if [ -e \"$PROJECT"/.mk/dep_TAGS_1 ]; then
+        cat \"$PROJECT"/.mk/dep_TAGS_* >> \$TAGS
+        rm -f \"$PROJECT"/.mk/dep_TAGS_*
     fi
 fi
 EOF
 
-    cat > $PROJECT/bin/find_all.sh <<EOF
+    cat > "$PROJECT"/bin/find_all.sh <<EOF
 #!/usr/bin/env bash
 
-export PROJECT=\${PROJECT:-$PROJECT}
-export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
-export PROJECT_DEVDIR=\$(readlink \$PROJECT/dev)
-find \$PROJECT_DEVDIR -name tmp -prune -o -name \\*_flymake.py -false -o -name \\*.py -print 2>/dev/null
+export PROJECT=\${PROJECT:-"$PROJECT"}
+export TAGS=\${TAGS:-\"$PROJECT"/.mk/TAGS}
+export PROJECT_DEVDIR=\$(readlink \"$PROJECT"/dev)
+find \"$PROJECT"_DEVDIR -name tmp -prune -o -name \\*_flymake.py -false -o -name \\*.py -print 2>/dev/null
 
-if [ -d \$PROJECT/dep ]; then
-    for dep in \$PROJECT/dep/*; do
+if [ -d \"$PROJECT"/dep ]; then
+    for dep in \"$PROJECT"/dep/*; do
         if [ -h \$dep ]; then
-            echo $PROJECTS_DIR/\${dep#\$PROJECT/dep/}
+            echo "$PROJECT"S_DIR/\${dep#\"$PROJECT"/dep/}
         fi
     done | parallel --gnu "PROJECT={} {}/bin/find_all.sh -a \$@"
 fi
 EOF
 
-    chmod +x $PROJECT/bin/tag_all.sh $PROJECT/bin/find_all.sh
-    _project_tag_all $PROJECT
+    chmod +x "$PROJECT"/bin/tag_all.sh "$PROJECT"/bin/find_all.sh
+    _project_tag_all "$PROJECT"
 }
 
-
-make_go() {
-    cat > $PROJECT/bin/find_path <<EOF
-echo $PROJECT/bin
-if [ -f $PROJECT/dev/.path ]; then
-    cat $PROJECT/dev/.path | awk -vpwd="$(readlink -f $PROJECT/dev)" '/^\// {printf("%s\n", \$0); next} {printf("%s/%s\n", pwd, \$0)}'
-else
-    find -L $PROJECT/dev/ -maxdepth 2 -name tmp -prune -o -type d -name bin -print | sort
-fi
-EOF
-
-    cat > $PROJECT/go <<EOF
-
-export PATH=\$(
-    {
-        $PROJECT/bin/find_path
-        test -d $PROJECT/dep && for dep in $PROJECT/dep/*; do
-            if [ -h \$dep ]; then
-                project=$PROJECTS_DIR/\${dep#\$PROJECT/dep/}
-                PROJECT=\$project \$project/bin/find_path
-            fi
-        done
-        echo \$PROJECT_DEFAULT_PATH
-    } | awk '{printf("%s:", \$0)}'
-)
-
-test "\$1" == "-fast" || _project_tag_all $PROJECT
-test -x $PROJECT/bin/go_hook && . $PROJECT/bin/go_hook
-EOF
-
-    chmod +x $PROJECT/go $PROJECT/bin/find_path
-}
-
-
-test -d $PROJECT/.mk || mkdir $PROJECT/.mk
+test -d "$PROJECT"/.mk || mkdir -p "$PROJECT"/.mk
 make_emacs
 make_tags
 make_go

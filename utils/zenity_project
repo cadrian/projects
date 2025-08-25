@@ -47,7 +47,9 @@ cache-is-stale() {
 # Test if the cache must be refreshed (i.e. there are newer files in $PROJECTS_DIR)
 if cache-is-stale; then
     mkdir -p "$CACHE_DIR" || fatal "could not create '$CACHE_DIR' directory"
-    printf "%s\n" "$PROJECTS_DIR"/* | sort -u > "$CACHE"
+    for f in "$PROJECTS_DIR"/*; do
+        echo "${f##*/}"
+    done | sort -u > "$CACHE"
 fi
 
 ask() {
@@ -65,6 +67,8 @@ project=$(ask) || exit 1
 [[ -n $project ]] || exit
 
 PROFILE=$PROJECTS_DIR/$project/.zenity_profile
+LOGDIR=$PROJECTS_DIR/$project/logs
+mkdir -p "$LOGDIR"
 cat > "$PROFILE" <<EOF
 export PROJECT_PACK="$pack"
 
@@ -85,7 +89,7 @@ fi
 #_ssh_agent_check
 
 go_to_project "$project"
-at now -f <("$pack"/utils/run_emacs.sh) >/dev/null 2>&1 <&- & disown
+at now -f <("$pack"/utils/run_emacs.sh) > "$LOGDIR"/run_emacs.log 2>&1 <&- & disown
 
 EOF
 
