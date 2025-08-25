@@ -90,7 +90,7 @@ function go_to_project {
     export HISTFILE=$PROJECT/bash.history
 
     export PS1="[$CURRENT_PROJECT] $PROJECT_DEFAULT_PS1"
-    cd $(find $PROJECT/dev -type l -exec readlink {} \;)
+    cd "$(find $PROJECT/dev -type l -exec readlink {} \;)"
 
     export PATH="$PROJECT_DEFAULT_PATH"
     test -x $PROJECT/go && . $PROJECT/go $FAST
@@ -133,8 +133,8 @@ function go_to_dependent_project {
     fi
 
     PROJECT=$PROJECTS_DIR/$CURRENT_PROJECT
-    opwd=$(pwd)
-    cd $(readlink $PROJECT/$dep)
+    opwd="$(pwd)"
+    cd "$(readlink $PROJECT/$dep)"
     test -x $PROJECTS_DIR/$proj/godep && . $PROJECTS_DIR/$proj/godep
     cd "$dir"
     OLDPWD="$opwd"
@@ -148,7 +148,7 @@ function go_to_dependent_project {
 function create_new_project {
     PROJECT=$PROJECTS_DIR/$1
     PROJECT_FACTORY=$PROJECT_PACK/types/$2.sh
-    PROJECT_DEVDIR=$(cd $3/. && pwd)
+    PROJECT_DEVDIR="$(cd "$3"/. && pwd)"
 
     if [ -z "$1" -o -z "$2" -o -z "$3" ]; then
         echo "Must provide: project name, project type, and project dev directory" >&2
@@ -171,16 +171,16 @@ function create_new_project {
         return 1
     fi
 
-    test -d $PROJECTS_DIR || mkdir $PROJECTS_DIR
+    test -d "$PROJECTS_DIR" || mkdir "$PROJECTS_DIR"
 
     echo "Please wait, creating project $1."
 
     mkdir $PROJECT
     mkdir $PROJECT/bin
-    ln -s $PROJECT_DEVDIR $PROJECT/dev
+    ln -s "$PROJECT_DEVDIR" $PROJECT/dev
     echo $2 > $PROJECT/type
 
-    $PROJECT_FACTORY $1 $PROJECT_DEVDIR
+    $PROJECT_FACTORY $1 "$PROJECT_DEVDIR"
 }
 
 
@@ -204,16 +204,16 @@ function update_project {
     PROJECT_FACTORY=$PROJECT_PACK/types/$type.sh
 
     if [ -n "$1" ]; then
-        PROJECT_DEVDIR=$(cd $1/. && pwd)
+        PROJECT_DEVDIR="$(cd "$1"/. && pwd)"
         rm $PROJECT/dev
-        ln -s $PROJECT_DEVDIR $PROJECT/dev
+        ln -s "$PROJECT_DEVDIR" $PROJECT/dev
     else
-        PROJECT_DEVDIR=$(readlink $PROJECT/dev)
+        PROJECT_DEVDIR="$(readlink $PROJECT/dev)"
     fi
 
     rm -f $PROJECT/.dmenu_profile $PROJECT/.zenity_profile
 
-    $PROJECT_FACTORY $CURRENT_PROJECT $PROJECT_DEVDIR
+    $PROJECT_FACTORY $CURRENT_PROJECT "$PROJECT_DEVDIR"
 }
 
 
@@ -247,8 +247,8 @@ function link_dependency {
     echo "Please wait, linking project $1 to $CURRENT_PROJECT."
 
     test -d $PROJECT/dep || mkdir $PROJECT/dep
-    DEP_PROJECT_DEV=$(readlink $DEP_PROJECT/dev)
-    ln -s $DEP_PROJECT_DEV $PROJECT/dep/$1
+    DEP_PROJECT_DEV="$(readlink $DEP_PROJECT/dev)"
+    ln -s "$DEP_PROJECT_DEV" $PROJECT/dep/$1
 }
 
 
@@ -259,7 +259,7 @@ function list_projects {
     printf "$format" "----------------" "--------" "--------------------------------------------------------------------------------"
     for project in $PROJECTS_DIR/*; do
         if [ -d $project ]; then
-            printf "$format" ${project##*/} $(< $project/type) $(readlink $project/dev)
+            printf "$format" ${project##*/} $(< $project/type) "$(readlink $project/dev)"
         fi
     done
 }
@@ -322,14 +322,14 @@ function _go_to_dependent_project_completion_ {
                 compdirs=0
                 if [ $COMP_CWORD -eq $((1 + $1)) ]; then
                     compgen -S ' ' -W "$(_list_deps)" -- "$cur"
-                    cd $(readlink "$PROJECTS_DIR/$CURRENT_PROJECT/dev")
+                    cd "$(readlink "$PROJECTS_DIR/$CURRENT_PROJECT/dev")"
                     compdirs=1
                 elif [ $COMP_CWORD -eq $((2 + $1)) ]; then
                     dep="${COMP_WORDS[$((1 + $1))]}"
                     if [ -e "$PROJECTS_DIR/$CURRENT_PROJECT/dep/$dep" ]; then
-                        cd $(readlink "$PROJECTS_DIR/$CURRENT_PROJECT/dep/$dep")
+                        cd "$(readlink "$PROJECTS_DIR/$CURRENT_PROJECT/dep/$dep")"
                     else
-                        cd $(readlink "$PROJECTS_DIR/$CURRENT_PROJECT/dev")
+                        cd "$(readlink "$PROJECTS_DIR/$CURRENT_PROJECT/dev")"
                     fi
                     compdirs=1
                 fi
@@ -494,7 +494,7 @@ function fgo {
 # Global finders
 
 function gf {
-    (cd $(readlink -f $PROJECTS_DIR/$CURRENT_PROJECT/dev); "$@")
+    (cd "$(readlink -f $PROJECTS_DIR/$CURRENT_PROJECT/dev)"; "$@")
 
     dep_dir=$PROJECTS_DIR/$CURRENT_PROJECT/dep
     if [ -d $dep_dir ]; then
