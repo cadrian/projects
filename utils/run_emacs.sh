@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# Copyright (c) 2010-2016, Cyril Adrian <cyril.adrian@gmail.com> All rights reserved.
+# Copyright (c) 2010-2025, Cyril Adrian <cyril.adrian@gmail.com> All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without modification, are permitted provided that
 # the following conditions are met:
@@ -21,4 +21,5 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 env | awk -F= '{v=$1; sub($1 FS, ""); printf("%s=\"%s\"\nexport %s\n", v, $0, v)}'
+echo "cd \"$(pwd)\""
 echo "exec emacs --maximized"
