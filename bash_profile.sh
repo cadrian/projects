@@ -1,4 +1,6 @@
-# Copyright (c) 2010-2016, Cyril Adrian <cyril.adrian@gmail.com> All rights reserved.
+#!/usr/bin/env bash
+
+# Copyright (c) 2010-2025, Cyril Adrian <cyril.adrian@gmail.com> All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without modification, are permitted provided that
 # the following conditions are met:
@@ -43,21 +45,21 @@ export PROJECT_DEFAULT_PS1="$PS1"
 
 # Go to the given project.
 # $1 => project name (defaults to current project, if it exists)
-function go_to_project {
-    if [ x"$1" == x"-fast" ]; then
+go_to_project() {
+    if [[ "$1" == "-fast" ]]; then
         FAST=-fast
         shift
     else
         FAST=""
     fi
 
-    if [ -z "$1" ]; then
+    if [[ -z "$1" ]]; then
         # Find the last saved project
-        if [ -z "$CURRENT_PROJECT" -a -h $PROJECT_CURRENT ]; then
-            CURRENT_PROJECT=$(find $PROJECT_CURRENT -type l -exec readlink {} \;)
+        if [[ -z $CURRENT_PROJECT && -h $PROJECT_CURRENT ]]; then
+            CURRENT_PROJECT=$(find "$PROJECT_CURRENT" -type l -exec readlink {} \;)
             CURRENT_PROJECT=${CURRENT_PROJECT##*/}
         fi
-        if [ -z "$CURRENT_PROJECT" ]; then
+        if [[ -z $CURRENT_PROJECT ]]; then
             echo "Must provide: project name" >&2
             echo "Not enough arguments: aborting." >&2
             return 1
@@ -67,65 +69,68 @@ function go_to_project {
     fi
 
     PROJECT=$PROJECTS_DIR/$CURRENT_PROJECT
-    test -d $PROJECTS_DIR || mkdir $PROJECTS_DIR
+    test -d "$PROJECTS_DIR" || mkdir "$PROJECTS_DIR"
 
-    if [ -e $PROJECT_CURRENT ]; then
-        if [ -h $PROJECT_CURRENT ]; then
-            rm -f $PROJECT_CURRENT
+    if [[ -e $PROJECT_CURRENT ]]; then
+        if [[ -h $PROJECT_CURRENT ]]; then
+            rm -f "$PROJECT_CURRENT"
         else
             echo "$PROJECT_CURRENT is not a symlink: aborting." >&2
             return 1
         fi
     fi
 
-    if [ ! -d $PROJECT ]; then
+    if [[ ! -d $PROJECT ]]; then
         echo "Unknown project $CURRENT_PROJECT: aborting." >&2
         return 1
     fi
 
     echo "Please wait, going to project $CURRENT_PROJECT."
 
-    ln -s $PROJECT $PROJECT_CURRENT
+    ln -s "$PROJECT" "$PROJECT_CURRENT"
 
-    export HISTFILE=$PROJECT/bash.history
+    export HISTFILE="$PROJECT"/bash.history
 
     export PS1="[$CURRENT_PROJECT] $PROJECT_DEFAULT_PS1"
-    cd "$(find $PROJECT/dev -type l -exec readlink {} \;)"
+    cd "$(find "$PROJECT"/dev -type l -exec readlink {} \;)" || {
+        echo "Could not go to the project directory: abotring." >&2
+        return 1
+    }
 
     export PATH="$PROJECT_DEFAULT_PATH"
-    test -x $PROJECT/go && . $PROJECT/go $FAST
+    test -x "$PROJECT"/go && . "$PROJECT"/go $FAST
 }
 
 
 # Temporarily go to the given project or directory. "dependent" because completion will propose deps of the current project.
 # $1 => project name (defaults to current project, if it exists)
 #       or directory in the current project
-function go_to_dependent_project {
-    if [ -z "$CURRENT_PROJECT" ]; then
+go_to_dependent_project() {
+    if [[ -z $CURRENT_PROJECT ]]; then
         echo "Please go to some project first: aborting." >&2
         return 1
     fi
 
-    if [ -z "$1" ]; then
+    if [[ -z "$1" ]]; then
         dep=dev
         proj=$CURRENT_PROJECT
         dir=.
-    elif [ "$1" == "$CURRENT_PROJECT" ]; then
+    elif [[ "$1" == "$CURRENT_PROJECT" ]]; then
         dep=dev
         proj=$CURRENT_PROJECT
-        if [ -z "$2" -o ! -d "$PROJECTS_DIR/$CURRENT_PROJECT/dev/$2" ]; then
+        if [[ -z "$2" || ! -d "$PROJECTS_DIR/$CURRENT_PROJECT/dev/$2" ]]; then
             dir=.
         else
             dir="$2"
         fi
-    elif [ -d "$PROJECTS_DIR/$CURRENT_PROJECT/dev/$1" ]; then
+    elif [[ -d "$PROJECTS_DIR/$CURRENT_PROJECT/dev/$1" ]]; then
         dep=dev
         proj=$CURRENT_PROJECT
         dir="$1"
     else
         dep=dep/$1
         proj=$1
-        if [ -z "$2" -o ! -d "$PROJECTS_DIR/$CURRENT_PROJECT/dep/$1/$2" ]; then
+        if [[ -z "$2" || ! -d "$PROJECTS_DIR/$CURRENT_PROJECT/dep/$1/$2" ]]; then
             dir=.
         else
             dir="$2"
@@ -134,9 +139,15 @@ function go_to_dependent_project {
 
     PROJECT=$PROJECTS_DIR/$CURRENT_PROJECT
     opwd="$(pwd)"
-    cd "$(readlink $PROJECT/$dep)"
-    test -x $PROJECTS_DIR/$proj/godep && . $PROJECTS_DIR/$proj/godep
-    cd "$dir"
+    cd "$(readlink "$PROJECT/$dep")" || {
+        echo "Could not go to project dependencies directory: aborting." >&2
+        return 1
+    }
+    test -x "$PROJECTS_DIR/$proj"/godep && . "$PROJECTS_DIR/$proj"/godep
+    cd "$dir" || {
+        echo "Could not go to dependent project: aborting." >&2
+        return 1
+    }
     OLDPWD="$opwd"
 }
 
@@ -145,28 +156,28 @@ function go_to_dependent_project {
 # $1 => project name
 # $2 => project type
 # $3 => project development directory
-function create_new_project {
+create_new_project() {
     PROJECT=$PROJECTS_DIR/$1
     PROJECT_FACTORY=$PROJECT_PACK/types/$2.sh
-    PROJECT_DEVDIR="$(cd "$3"/. && pwd)"
+    PROJECT_DEVDIR=$(cd "$3"/. && pwd)
 
-    if [ -z "$1" -o -z "$2" -o -z "$3" ]; then
+    if [[ -z "$1" || -z "$2" || -z "$3" ]]; then
         echo "Must provide: project name, project type, and project dev directory" >&2
         echo "Not enough arguments: aborting." >&2
         return 1
     fi
 
-    if [ -d $PROJECT ]; then
+    if [[ -d $PROJECT ]]; then
         echo "Duplicate project $1: aborting." >&2
         return 1
     fi
 
-    if [ ! -x $PROJECT_FACTORY ]; then
+    if [[ ! -x $PROJECT_FACTORY ]]; then
         echo "Unknown project type $2: aborting." >&2
         return 1
     fi
 
-    if [ ! -d "$PROJECT_DEVDIR" ]; then
+    if [[ ! -d $PROJECT_DEVDIR ]]; then
         echo "Unknown dev directory $3: aborting." >&2
         return 1
     fi
@@ -175,235 +186,221 @@ function create_new_project {
 
     echo "Please wait, creating project $1."
 
-    mkdir $PROJECT
-    mkdir $PROJECT/bin
-    ln -s "$PROJECT_DEVDIR" $PROJECT/dev
-    echo $2 > $PROJECT/type
+    mkdir -p "$PROJECT" "$PROJECT/bin"
+    ln -s "$PROJECT_DEVDIR" "$PROJECT"/dev
+    echo "$2" > "$PROJECT"/type
 
-    $PROJECT_FACTORY $1 "$PROJECT_DEVDIR"
+    "$PROJECT_FACTORY" "$1" "$PROJECT_DEVDIR"
 }
 
 
 # Update an existing project with the latest changes in the project manager.
-function update_project {
+update_project() {
     PROJECT=$PROJECTS_DIR/$CURRENT_PROJECT
 
-    if [ -z $CURRENT_PROJECT ]; then
+    if [[ -z $CURRENT_PROJECT ]]; then
         echo "Must be in a project" >&2
         return 1
     fi
 
-    if [ \( ! -d $PROJECT \) -o \( ! -d $PROJECT/bin \) -o \( ! -h $PROJECT/dev \) ]; then
+    if [[ ( ! -d $PROJECT ) || ( ! -d $PROJECT/bin ) || ( ! -h $PROJECT/dev ) ]]; then
         echo "Unknown or invalid project $CURRENT_PROJECT: aborting." >&2
         return 1
     fi
 
     echo "Please wait, updating project $CURRENT_PROJECT."
 
-    type=$(< $PROJECT/type)
+    type=$(< "$PROJECT"/type)
     PROJECT_FACTORY=$PROJECT_PACK/types/$type.sh
 
-    if [ -n "$1" ]; then
-        PROJECT_DEVDIR="$(cd "$1"/. && pwd)"
-        rm $PROJECT/dev
-        ln -s "$PROJECT_DEVDIR" $PROJECT/dev
+    if [[ -n "$1" ]]; then
+        PROJECT_DEVDIR=$(cd "$1"/. && pwd)
+        rm "$PROJECT"/dev
+        ln -s "$PROJECT_DEVDIR" "$PROJECT"/dev
     else
-        PROJECT_DEVDIR="$(readlink $PROJECT/dev)"
+        PROJECT_DEVDIR=$(readlink "$PROJECT"/dev)
     fi
 
-    rm -f $PROJECT/.dmenu_profile $PROJECT/.zenity_profile
+    rm -f "$PROJECT"/.dmenu_profile "$PROJECT"/.zenity_profile
 
-    $PROJECT_FACTORY $CURRENT_PROJECT "$PROJECT_DEVDIR"
+    "$PROJECT_FACTORY" "$CURRENT_PROJECT" "$PROJECT_DEVDIR"
 }
 
 
 # Create a new project.
 # $1 => project name to link to current
-function link_dependency {
+link_dependency() {
     DEP_PROJECT=$PROJECTS_DIR/$1
     PROJECT=$PROJECTS_DIR/$CURRENT_PROJECT
 
-    if [ -z $CURRENT_PROJECT ]; then
+    if [[ -z $CURRENT_PROJECT ]]; then
         echo "Must be in a project" >&2
         return 1
     fi
 
-    if [ -z "$1" ]; then
+    if [[ -z "$1" ]]; then
         echo "Must provide: dependent project" >&2
         echo "Not enough arguments: aborting." >&2
         return 1
     fi
 
-    if [ ! -d $DEP_PROJECT ]; then
+    if [[ ! -d $DEP_PROJECT ]]; then
         echo "Unknown project $1: aborting." >&2
         return 1
     fi
 
-    if [ -h $PROJECT/dep/$1 ]; then
+    if [[ -h $PROJECT/dep/$1 ]]; then
         echo "Dependency already linked; nothing to do." >&2
         return 0
     fi
 
     echo "Please wait, linking project $1 to $CURRENT_PROJECT."
 
-    test -d $PROJECT/dep || mkdir $PROJECT/dep
-    DEP_PROJECT_DEV="$(readlink $DEP_PROJECT/dev)"
-    ln -s "$DEP_PROJECT_DEV" $PROJECT/dep/$1
+    test -d "$PROJECT"/dep || mkdir -p "$PROJECT"/dep
+    DEP_PROJECT_DEV=$(readlink "$DEP_PROJECT"/dev)
+    ln -s "$DEP_PROJECT_DEV" "$PROJECT/dep/$1"
 }
 
 
 # List all known projects.
-function list_projects {
-    format="%-16s | %-8s | %-80s\n"
-    printf "$format" Name Type "Home dev directory"
-    printf "$format" "----------------" "--------" "--------------------------------------------------------------------------------"
-    for project in $PROJECTS_DIR/*; do
-        if [ -d $project ]; then
-            printf "$format" ${project##*/} $(< $project/type) "$(readlink $project/dev)"
+list_projects() {
+    printf "%-16s | %-8s | %-80s\n" Name Type "Home dev directory"
+    printf "%-16s | %-8s | %-80s\n" "----------------" "--------" "--------------------------------------------------------------------------------"
+    for project in "$PROJECTS_DIR"/*; do
+        if [ -d "$project" ]; then
+            printf "%-16s | %-8s | %-80s\n" "${project##*/}" "$(< "$project"/type)" "$(readlink "$project"/dev)"
         fi
     done
 }
 
 
 # Bash completion
-function _list_projects {
-    find $PROJECTS_DIR -mindepth 1 -maxdepth 1 -type d | sed 's!^'"$PROJECTS_DIR/"'!!' | sort -u
+_list_projects() {
+    for f in "$PROJECTS_DIR"/*; do
+        [[ -d $f ]] && echo "${f#"$PROJECTS_DIR/"}"
+    done
 }
 
-function _list_types {
-    find $PROJECT_PACK/types -name \*.sh -executable | sed 's!^'"$PROJECT_PACK/types/"'\(.*\)\.sh$!\1!' | sort -u
+_list_types() {
+    for f in "$PROJECT_PACK"/types/*.sh; do
+        f="${f#"$PROJECT_PACK/types/"}"
+        echo "${f%.sh}"
+    done
 }
 
-function _list_deps {
-    {
-        test -d $PROJECTS_DIR/$CURRENT_PROJECT/dep && find $PROJECTS_DIR/$CURRENT_PROJECT/dep -mindepth 1 -maxdepth 1 -type l | sed 's!^'"$PROJECTS_DIR/$CURRENT_PROJECT/dep/"'!!'
-        echo $CURRENT_PROJECT
-    } | sort -u
+_list_deps() {
+    for f in "$PROJECTS_DIR/$CURRENT_PROJECT"/dep/*; do
+        [[ -h $f ]] && echo "${f#"$PROJECTS_DIR/$CURRENT_PROJECT/dep/"}"
+    done
+    echo "$CURRENT_PROJECT"
 }
 
-function _go_to_project_completion_ {
-    local IFS=$'\n'
-    local cur extglob
-    shopt extglob|grep -q on
-    extglob=$?
-    shopt -s extglob
+_go_to_project_completion_() {
     # the possible completion words
     COMPREPLY=()
     # the current word to be completed, can be empty
-    cur="${COMP_WORDS[COMP_CWORD]}"
+    local cur="${COMP_WORDS[COMP_CWORD]}"
 
-    if [ $COMP_CWORD -eq $((1 + $1)) ]; then
-        COMPREPLY=($(compgen -S ' ' -W "$(_list_projects)" -- "$cur"))
-    fi
-
-    if [ $extglob = 1 ]; then
-        shopt -u extglob
+    if (( COMP_CWORD == 1 + $1 )); then
+        read -r -d '' -a COMPREPLY < <(
+            read -r -d '' -a projects < <(_list_projects)
+            compgen -S ' ' -W "${projects[*]}" -- "$cur"
+        )
     fi
 }
-function _go_to_project_completion {
+_go_to_project_completion() {
     _go_to_project_completion_ 0
 }
 complete -o nospace -F _go_to_project_completion go_to_project gp link_dependency lp
 
-function _go_to_dependent_project_completion_ {
-    local IFS=$'\n'
-    local cur extglob
-    shopt extglob|grep -q on
-    extglob=$?
-    shopt -s extglob
+_go_to_dependent_project_completion_() {
     # the possible completion words
     COMPREPLY=()
     # the current word to be completed, can be empty
-    cur="${COMP_WORDS[COMP_CWORD]}"
+    local cur="${COMP_WORDS[COMP_CWORD]}"
 
-    if [ $COMP_CWORD -gt $1 ]; then
-        COMPREPLY=(
-            $(
-                compdirs=0
-                if [ $COMP_CWORD -eq $((1 + $1)) ]; then
-                    compgen -S ' ' -W "$(_list_deps)" -- "$cur"
+    if (( COMP_CWORD > $1 )); then
+        read -r -d '' -a COMPREPLY < <(
+            compdirs=0
+            if (( COMP_CWORD == 1 + $1 )); then
+                read -r -d '' -a deps < <(_list_deps)
+                compgen -S ' ' -W "${deps[*]}" -- "$cur"
+                cd "$(readlink "$PROJECTS_DIR/$CURRENT_PROJECT/dev")" && compdirs=1
+            elif (( COMP_CWORD == 2 + $1 )); then
+                dep="${COMP_WORDS[$((1 + $1))]}"
+                if [ -e "$PROJECTS_DIR/$CURRENT_PROJECT/dep/$dep" ]; then
+                    cd "$(readlink "$PROJECTS_DIR/$CURRENT_PROJECT/dep/$dep")"
+                else
                     cd "$(readlink "$PROJECTS_DIR/$CURRENT_PROJECT/dev")"
-                    compdirs=1
-                elif [ $COMP_CWORD -eq $((2 + $1)) ]; then
-                    dep="${COMP_WORDS[$((1 + $1))]}"
-                    if [ -e "$PROJECTS_DIR/$CURRENT_PROJECT/dep/$dep" ]; then
-                        cd "$(readlink "$PROJECTS_DIR/$CURRENT_PROJECT/dep/$dep")"
+                fi && compdirs=1
+            fi
+            if (( compdirs == 1 )); then
+                read -r -d '' -a dirs < <(
+                    curdir="${cur##*/}"
+                    if [[ -z "$curdir" || "$curdir" == . ]]; then
+                        for f in *; do
+                            [[ -d $f ]] && echo "$f"
+                        done
+                    elif [[ -d $cur ]]; then
+                        for f in "$cur"/*; do
+                            [[ -d $f ]] && echo "$f"
+                        done
                     else
-                        cd "$(readlink "$PROJECTS_DIR/$CURRENT_PROJECT/dev")"
-                    fi
-                    compdirs=1
-                fi
-                if [ $compdirs == 1 ]; then
-                    dirs=$(
-                        if [ $(dirname "$cur") = '.' ]; then
-                            find . -mindepth 1 -maxdepth 1 -name .?\* -prune -o -type d -print | cut -c3-
-                        elif [ -d $cur ]; then
-                            find $cur -mindepth 1 -maxdepth 1 -name .?\* -prune -o -type d -print
-                        else
-                            find $(dirname $cur) -mindepth 1 -maxdepth 1 -name .?\* -prune -o -type d -print
-                        fi 2>/dev/null
-                    )
-                    compgen -d -S / -W "$dirs" -- "$cur"
-                fi
-            )
+                        for f in "$curdir"/*; do
+                            [[ -d $f ]] && echo "$f"
+                        done
+                    fi 2>/dev/null
+                )
+                compgen -d -S / -W "${dirs[*]}" -- "$cur"
+            fi
         )
     fi
-
-    if [ $extglob = 1 ]; then
-        shopt -u extglob
-    fi
 }
-function _go_to_dependent_project_completion {
+_go_to_dependent_project_completion() {
     _go_to_dependent_project_completion_ 0
 }
 
-complete -o nospace -F _go_to_dependent_project_completion go_to_dependent_project cdp
+complete -o nospace -F _go_to_dependent_project_completion go_to_dependent_project cd
 
-function _create_new_project_completion_ {
-    local IFS=$'\n'
-    local cur extglob
-    shopt extglob|grep -q on
-    extglob=$?
-    shopt -s extglob
+_create_new_project_completion_() {
     # the possible completion words
     COMPREPLY=()
     # the current word to be completed, can be empty
-    cur="${COMP_WORDS[COMP_CWORD]}"
+    local cur="${COMP_WORDS[COMP_CWORD]}"
 
-    case $(($COMP_CWORD - $1)) in
+    case $(("$COMP_CWORD" - $1)) in
         2)
-            COMPREPLY=($(compgen -S ' ' -W "$(_list_types)" -- "$cur"))
+            read -r -d '' -a COMPREPLY < <(
+                read -r -d '' -a types < <(_list_types)
+                compgen -S ' ' -W "${types[*]}" -- "$cur"
+            )
             ;;
         3)
-            COMPREPLY=($(compgen -d -S / -W "." -- "$cur"))
+            read -r -a COMPREPLY < <(
+                compgen -d -S / -W "." -- "$cur"
+            )
             ;;
     esac
-
-    if [ $extglob = 1 ]; then
-        shopt -u extglob
-    fi
 }
-function _create_new_project_completion {
+_create_new_project_completion() {
     _create_new_project_completion_ 0
 }
-complete -o nospace -F _create_new_project_completion create_new_project np
+complete -o nospace -F _create_new_project_completion create_new_project new
 
 
 #internals for opening a new tab. Used by project_tabbed() below and by the new_tab.sh script
-function _project_tabbed {
-    windowid=$1
-    dir=$2
-    prj=$3
+_project_tabbed() {
+    local windowid=$1
+    local dir=$2
+    local prj=$3
 
-    if WID=$(xdotool search --class "gnome-terminal" | grep $windowid); then
-        :
-    else
+    WID=$(xdotool search --class "gnome-terminal" | grep "$windowid") || {
         echo "Not in a gnome-terminal: aborting." >&2
         return 1
-    fi
+    }
 
     xdotool key ctrl+shift+t
-    wmctrl -i -a $WID
+    wmctrl -i -a "$WID"
     sleep 1
     xdotool type --clearmodifiers "go_to_project -fast $prj"
     xdotool key  --clearmodifiers ctrl+j
@@ -417,143 +414,26 @@ function _project_tabbed {
 }
 
 # Open a new tab in gnome-terminal, for the same project.
-function project_tabbed {
-    if [ -z "$CURRENT_PROJECT" ]; then
+project_tabbed() {
+    if [[ -z $CURRENT_PROJECT ]]; then
         echo "Please go to some project first: aborting." >&2
         return 1
     fi
 
-    if [ -z "$WINDOWID" ]; then
+    if [[ -z $WINDOWID ]]; then
         echo "Not in a window: aborting." >&2
         return 1
     fi
 
-    xdotool windowfocus $WID #useless?
-    _project_tabbed $WINDOWID $(pwd) "$CURRENT_PROJECT"
-}
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Finders
-
-function findpwd {
-    find "$(pwd)" \( -name CVS -o -name .svn -o -name .git -o -name '@*' -o -name tmp \) -prune -o "$@"
-}
-
-function nbprocs {
-    echo -P$((2 * $(cat /proc/cpuinfo|grep '^processor'|wc -l)))
-}
-
-function fgrep {
-    findpwd -type f -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
-}
-# fgrep is often an alias; be sure to remove it
-alias fgrep=
-unalias fgrep
-
-function fpy {
-    findpwd \( -iname \*.py -o -iname \*.config \) -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
-}
-
-function fc {
-    findpwd -iname \*.[ch] -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
-}
-
-function fcpp {
-    findpwd \( -iname \*.[ch]pp -o -iname \*.[ch] \) -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
-}
-
-function fbas {
-    findpwd \( -iname \*.cls -o -iname \*.bas -o -iname \*.frm \)  -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
-}
-
-function fj {
-    findpwd -iname \*.java -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
-}
-
-function fhtml {
-    findpwd -iname \*.html -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
-}
-
-function fe {
-    findpwd -iname \*.e -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
-}
-
-function flog {
-    findpwd \( -iname \*.log -o -iname \*.dbg -o -iname \*.txt -o -iname \*.[0-9][0-9][0-9] \) -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
-}
-
-function fconf {
-    findpwd \( -iname \*.conf -o -iname \*.ini -o -iname \*make\* \) -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
-}
-
-function fgo {
-    findpwd -iname \*.go -print0 | xargs -0 $(nbprocs) -i grep -Hn "$@" {}
-}
-
-# Global finders
-
-function gf {
-    (cd "$(readlink -f $PROJECTS_DIR/$CURRENT_PROJECT/dev)"; "$@")
-
-    dep_dir=$PROJECTS_DIR/$CURRENT_PROJECT/dep
-    if [ -d $dep_dir ]; then
-        for dep_link in $(echo $dep_dir/*); do
-            dep=$(readlink -f $dep_link)
-            (cd $dep; "$@")
-        done
-    fi
-}
-
-function gfgrep {
-    gf fg "$@"
-}
-
-function gfpy {
-    gf fpy "$@"
-}
-
-function gfc {
-    gf fc "$@"
-}
-
-function gfcpp {
-    gf fcpp "$@"
-}
-
-function gfbas {
-    gf fbas "$@"
-}
-
-function gfj {
-    gf fj "$@"
-}
-
-function gfhtml {
-    gf fhtml "$@"
-}
-
-function gfe {
-    gf fe "$@"
-}
-
-function gflog {
-    gf flog "$@"
-}
-
-function gfconf {
-    gf fconf "$@"
-}
-
-function gfgo {
-    gf fgo "$@"
+    xdotool windowfocus "$WID" #useless?
+    _project_tabbed "$WINDOWID" "$(pwd)" "$CURRENT_PROJECT"
 }
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Commands hub
 
-function _p_help {
+_p_help() {
     cat <<EOF
 Usage: p <cmd> <args...>
 
@@ -601,7 +481,7 @@ usage
                 well... this screen :-)
 
 
-Copyright (C) 2010-2013 Cyril Adrian <cyril.adrian@gmail.com>
+Copyright (C) 2010-2025 Cyril Adrian <cyril.adrian@gmail.com>
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -611,8 +491,8 @@ A PARTICULAR PURPOSE ARE DISCLAIMED.
 EOF
 }
 
-function p {
-    fun=$1
+p() {
+    local fun=$1
     shift
     case "$fun" in
         go)          go_to_project           "$@" ; return $? ;;
@@ -637,17 +517,20 @@ function p {
     esac
 }
 
-function _p_completion {
-    local IFS=$'\n'
+_p_completion() {
     # the possible completion words
     COMPREPLY=()
     # the current word to be completed, can be empty
     cur="${COMP_WORDS[COMP_CWORD]}"
 
-    if [ $COMP_CWORD -eq 1 ]; then
-        COMPREPLY=($(compgen -S ' ' -W "go cd new ln link ls list up update tab" -- "$cur"))
+    if (( COMP_CWORD == 1 )); then
+        read -r -a COMPREPLY < <(
+            IFS=$'\n'
+            shopt -s extglob
+            compgen -S ' ' -W "go cd new ln link ls list up update tab" -- "$cur"
+        )
     else
-        case ${COMP_WORDS[1]} in
+        case "${COMP_WORDS[1]}" in
         go)          _go_to_project_completion_           1 ;;
         cd)          _go_to_dependent_project_completion_ 1 ;;
         new)         _create_new_project_completion_      1 ;;
@@ -665,24 +548,28 @@ complete -o nospace -F _p_completion p
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Internal functions
 
-function _project_tag_all {
-    project=$1
-    nb=$($project/bin/find_all.sh | wc -l)
+_project_tag_all() {
+    local project=$1
+    local all nb cols
+    read -r -a all < <(
+        "$project"/bin/find_all.sh
+    )
+    nb=${#all[@]}
     cols=$(stty size|awk '{print $2}')
-    rm -f ${TAGS:-$PROJECT/.mk/TAGS}
-    $project/bin/tag_all.sh -V | grep '^OPENING' | awk -vcols=$cols -vsize=30 -vmax=$nb '
+    rm -f "${TAGS:-"$PROJECT"/.mk/TAGS}"
+    "$project"/bin/tag_all.sh -V | grep '^OPENING' | awk -vcols="$cols" -vsize=30 -vmax="$nb" '
        BEGIN {
           len = cols - size - 6;
        }
        max > 0 {
           fill = int(size * NR / max + .5);
-          printf("'`tput bold`'%3d%%'`tput sgr0`' '`tput setab 6`'", 100*NR/max + .5);
+          printf("'"$(tput bold)"'%3d%%'"$(tput sgr0)"' '"$(tput setab 6)"'", 100*NR/max + .5);
           for (i=0; i < fill; i++)
              printf(" ");
-          printf("'`tput setab 4`'");
+          printf("'"$(tput setab 4)"'");
           for (i=fill; i < size; i++)
              printf(" ");
-          printf("'`tput sgr0`' ");
+          printf("'"$(tput sgr0)"' ");
 
           if (length($2) < len) {
              a = $2;
@@ -700,32 +587,32 @@ function _project_tag_all {
 
 ssh_agent_info=${TMPDIR:-/tmp}/ssh_agent_$USER.info
 
-function _ssh_agent_check {
-    if [ -r $ssh_agent_info ]; then
-        . $ssh_agent_info
+_ssh_agent_check() {
+    if [ -r "$ssh_agent_info" ]; then
+        . "$ssh_agent_info"
     fi
-    if ssh-add -l | awk '$3 == "'$HOME/.ssh/id_rsa'" {exit 0} {exit 1}'; then
+    if ssh-add -l | awk '$3 == "'"$HOME"/.ssh/id_rsa'" {exit 0} {exit 1}'; then
         :
-    elif [ -x /usr/lib/openssh/gnome-ssh-askpass ]; then
+    elif [[ -x /usr/lib/openssh/gnome-ssh-askpass ]]; then
         (
             export SSH_ASKPASS=/usr/lib/openssh/gnome-ssh-askpass
             exec ssh-add </dev/null
         )
-    elif [ $(tty) != "not a tty" ]; then
+    elif [[ -t 1 ]]; then
         ssh-add
     else
         xterm -g 80x5 -T ssh-add -e ssh-add
     fi
 }
 
-function ssh_agent_start {
-    if [ \! -r $ssh_agent_info ]; then
+ssh_agent_start() {
+    if [[ ! -r "$ssh_agent_info" ]]; then
         (
-            exec ssh-agent > $ssh_agent_info
+            exec ssh-agent > "$ssh_agent_info"
         ) & disown
         if which inotifywait >/dev/null 2>&1; then
-            while [ ! -f "$ssh_agent_info" ]; do
-                inotifywait -qqt 1 -e create -e moved_to "$(dirname $ssh_agent_info)"
+            while [[ ! -f "$ssh_agent_info" ]]; do
+                inotifywait -qqt 1 -e create -e moved_to "$(dirname "$ssh_agent_info")"
             done
         else
             sleep 2
