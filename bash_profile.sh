@@ -551,7 +551,7 @@ complete -o nospace -F _p_completion p
 _project_tag_all() {
     local project=$1
     local all nb cols
-    read -r -a all < <(
+    read -r -d '' -a all < <(
         "$project"/bin/find_all.sh
     )
     nb=${#all[@]}
