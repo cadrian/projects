@@ -1,12 +1,12 @@
 **A collection of tools for multiple projects management.**
 
-* Usage
+# Usage
 
 Just source __bash_profile.sh__
 
 The command is **p**
 
-** Create a new project
+## Create a new project
 
 **p new <name> <type> <directory>**
 
@@ -14,15 +14,15 @@ Create a new project of the given type. Give it a name and a root directory loca
 
 Supported project types: C, python, java, eiffel, go, PHP, and more.
 
-** Go to a project
+## Go to a project
 
-*** Basic command line support
+### Basic command line support
 
 **p go <name>**
 
 In the shell, go to the given project root directory
 
-*** GUI support
+### GUI support
 
 Bind a shortcut to either __zenity_project__ or __dmenu_project__.
 
@@ -34,7 +34,7 @@ given project.
 **Note:** the __demnu_project__ script is not well maintained. I don't
 use it anymore since __dmenu__ does not work properly with Wayland.
 
-* Prerequisites
+# Prerequisites
 
 At least:
 - [GNU **bash**](https://www.gnu.org/software/bash/)
@@ -46,7 +46,7 @@ At least:
 Optional:
 - Either **zenity**, **yad**, or **dmenu** for GUI support.
 
-* License
+# License
 
 2-clause BSD where applicable (http://opensource.org/licenses/BSD-2-Clause)
 
