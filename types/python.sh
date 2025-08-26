@@ -28,23 +28,23 @@ make_tags() {
 #!/usr/bin/env bash
 
 export PROJECT=\${PROJECT:-"$PROJECT"}
-export TAGS=\${TAGS:-\"$PROJECT"/.mk/TAGS}
-export LOG=\${LOG:-\"$PROJECT"/.mk/tag_log}
-export PROJECT_DEVDIR=\$(readlink \"$PROJECT"/dev)
+export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
+export LOG=\${LOG:-\$PROJECT/.mk/tag_log}
+export PROJECT_DEVDIR=\$(readlink \$PROJECT/dev)
 test x\$1 == x-a || rm -f \$LOG
 touch \$LOG
 echo "\$(date -R) - updating "$PROJECT"" >>\$LOG
-find \"$PROJECT"_DEVDIR -name tmp -prune -o -name \\*_flymake.py -false -o -name \\*.py -print | parallel --gnu --pipe etags \$@ -f\$TAGS --language-force=python --python-kinds=cfm -L- 2>>\$LOG || echo "Brand new project: no file tagged."
+find \$PROJECT_DEVDIR -name tmp -prune -o -name \\*_flymake.py -false -o -name \\*.py -print | parallel --gnu --pipe etags \$@ -f\$TAGS --language-force=python --python-kinds=cfm -L- 2>>\$LOG || echo "Brand new project: no file tagged."
 
-if [ -d \"$PROJECT"/dep ]; then
-    for dep in \"$PROJECT"/dep/*; do
+if [ -d \$PROJECT/dep ]; then
+    for dep in \$PROJECT/dep/*; do
         if [ -h \$dep ]; then
-            echo "$PROJECT"S_DIR/\${dep#\"$PROJECT"/dep/}
+            echo "$PROJECT"S_DIR/\${dep#\$PROJECT/dep/}
         fi
-    done | parallel --gnu "TAGS=\"$PROJECT"/.mk/dep_TAGS_{#} PROJECT={} {}/bin/tag_all.sh \$@"
-    if [ -e \"$PROJECT"/.mk/dep_TAGS_1 ]; then
-        cat \"$PROJECT"/.mk/dep_TAGS_* >> \$TAGS
-        rm -f \"$PROJECT"/.mk/dep_TAGS_*
+    done | parallel --gnu "TAGS=\$PROJECT/.mk/dep_TAGS_{#} PROJECT={} {}/bin/tag_all.sh \$@"
+    if [ -e \$PROJECT/.mk/dep_TAGS_1 ]; then
+        cat \$PROJECT/.mk/dep_TAGS_* >> \$TAGS
+        rm -f \$PROJECT/.mk/dep_TAGS_*
     fi
 fi
 EOF
@@ -53,14 +53,14 @@ EOF
 #!/usr/bin/env bash
 
 export PROJECT=\${PROJECT:-"$PROJECT"}
-export TAGS=\${TAGS:-\"$PROJECT"/.mk/TAGS}
-export PROJECT_DEVDIR=\$(readlink \"$PROJECT"/dev)
-find \"$PROJECT"_DEVDIR -name tmp -prune -o -name \\*_flymake.py -false -o -name \\*.py -print 2>/dev/null
+export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
+export PROJECT_DEVDIR=\$(readlink \$PROJECT/dev)
+find \$PROJECT_DEVDIR -name tmp -prune -o -name \\*_flymake.py -false -o -name \\*.py -print 2>/dev/null
 
-if [ -d \"$PROJECT"/dep ]; then
-    for dep in \"$PROJECT"/dep/*; do
+if [ -d \$PROJECT/dep ]; then
+    for dep in \$PROJECT/dep/*; do
         if [ -h \$dep ]; then
-            echo "$PROJECT"S_DIR/\${dep#\"$PROJECT"/dep/}
+            echo "$PROJECT"S_DIR/\${dep#\$PROJECT/dep/}
         fi
     done | parallel --gnu "PROJECT={} {}/bin/find_all.sh -a \$@"
 fi

@@ -28,18 +28,18 @@ make_tags() {
 #!/usr/bin/env bash
 
 export PROJECT=\${PROJECT:-"$PROJECT"}
-export TAGS=\${TAGS:-\"$PROJECT"/.mk/TAGS}
-export LOG=\${LOG:-\"$PROJECT"/.mk/tag_log}
-export PROJECT_DEVDIR=\$(readlink \"$PROJECT"/dev)
+export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
+export LOG=\${LOG:-\$PROJECT/.mk/tag_log}
+export PROJECT_DEVDIR=\$(readlink \$PROJECT/dev)
 test x\$1 == x-a || rm -f \$LOG
 touch \$LOG
 echo "\$(date -R) - updating "$PROJECT"" >>\$LOG
-find \"$PROJECT"_DEVDIR -name \\*.php -o -name \\*.html | etags \$@ -f \$TAGS --language-force=PHP -L- 2>\$LOG || echo "Brand new project: no file tagged."
+find \$PROJECT_DEVDIR -name \\*.php -o -name \\*.html | etags \$@ -f \$TAGS --language-force=PHP -L- 2>\$LOG || echo "Brand new project: no file tagged."
 
-if [ -d \"$PROJECT"/dep ]; then
-    for dep in \$(echo \"$PROJECT"/dep/*); do
+if [ -d \$PROJECT/dep ]; then
+    for dep in \$(echo \$PROJECT/dep/*); do
         if [ -h \$dep ]; then
-            project="$PROJECT"S_DIR/\${dep#\"$PROJECT"/dep/}
+            project="$PROJECT"S_DIR/\${dep#\$PROJECT/dep/}
             PROJECT=\$project \$project/bin/tag_all.sh -a \$@
         fi
     done
@@ -50,14 +50,14 @@ EOF
 #!/usr/bin/env bash
 
 export PROJECT=\${PROJECT:-"$PROJECT"}
-export TAGS=\${TAGS:-\"$PROJECT"/.mk/TAGS}
-export PROJECT_DEVDIR=\$(readlink \"$PROJECT"/dev)
-find \"$PROJECT"_DEVDIR -name \\*.php -o -name \\*.html 2>/dev/null
+export TAGS=\${TAGS:-\$PROJECT/.mk/TAGS}
+export PROJECT_DEVDIR=\$(readlink \$PROJECT/dev)
+find \$PROJECT_DEVDIR -name \\*.php -o -name \\*.html 2>/dev/null
 
-if [ -d \"$PROJECT"/dep ]; then
-    for dep in \$(echo \"$PROJECT"/dep/*); do
+if [ -d \$PROJECT/dep ]; then
+    for dep in \$(echo \$PROJECT/dep/*); do
         if [ -h \$dep ]; then
-            project="$PROJECT"S_DIR/\${dep#\"$PROJECT"/dep/}
+            project="$PROJECT"S_DIR/\${dep#\$PROJECT/dep/}
             PROJECT=\$project \$project/bin/find_all.sh -a \$@
         fi
     done
