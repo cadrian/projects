@@ -26,11 +26,34 @@ PROJECT_DEVDIR="$2"
 
 . $PROJECT_PACK/bash_profile.sh
 
+EMACS_EXE=$(command -v -- emacs-snapshot || command -v -- emacs)
+
+ETAGS_EXE=$(
+    if c=$(command -v -- etags); then
+        echo "$c"
+        return
+    fi
+    if c=$(command -v -- ctags); then
+        if "$c" --version | grep -Eiq 'exuberant|universal'; then
+            echo "$c"
+            return
+        fi
+    fi
+    if c=$(command -v -- ctags-universal); then
+        echo "$c"
+        return
+    fi
+    if c=$(command -v -- ctags-exuberant); then
+        echo "$c"
+        return
+    fi
+    echo "etags"
+)
+
 make_emacs() {
     test -h "$PROJECT"/bin/emacs && rm "$PROJECT"/bin/emacs
-    EMACS=$(which emacs-snapshot || which emacs)
-    test -e "$PROJECT"/bin/emacs || ln -s $EMACS "$PROJECT"/bin/emacs
-    test -e "$PROJECT"/bin/etags || ln -s /usr/bin/ctags-exuberant "$PROJECT"/bin/etags
+    test -e "$PROJECT"/bin/emacs || ln -s "$EMACS_EXE" "$PROJECT"/bin/emacs
+    test -e "$PROJECT"/bin/etags || ln -s "$ETAGS_EXE" "$PROJECT"/bin/etags
 
     cat > "$PROJECT"/project.el <<EOF
 (set-frame-name "Emacs: $PROJECT_NAME")

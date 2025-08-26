@@ -93,7 +93,7 @@ go_to_project() {
 
     export PS1="[$CURRENT_PROJECT] $PROJECT_DEFAULT_PS1"
     cd "$(find "$PROJECT"/dev -type l -exec readlink {} \;)" || {
-        echo "Could not go to the project directory: abotring." >&2
+        echo "Could not go to the project directory: aborting." >&2
         return 1
     }
 
